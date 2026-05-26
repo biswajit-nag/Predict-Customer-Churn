@@ -1,8 +1,17 @@
 """Stratified k-fold cross-validation loop for experiment tracking.
 
-The single public function run_cv_experiment() runs a full CV experiment,
-collects OOF and test probabilities, aggregates feature importance, gathers
-reproducibility metadata, and delegates persistence to src.tracking.save_run.
+Public functions
+----------------
+run_cv_experiment()
+    Runs a full CV experiment, collects OOF and test probabilities, aggregates
+    feature importance, and gathers reproducibility metadata.  Prints fold
+    scores and the final OOF metric but does **not** save anything to disk.
+    Returns a result dict that can be inspected before committing to storage.
+
+save_experiment(result)
+    Persists a result dict returned by run_cv_experiment() to disk and appends
+    a row to experiments/runs.csv.  Call this only after reviewing the printed
+    scores and deciding the run is worth keeping.
 """
 
 import datetime
@@ -161,8 +170,6 @@ def run_cv_experiment(
         "fold_scores_std":   float(np.std(fold_scores)),
         "oof_score":         float(oof_score),
         "training_time_sec": float(sum(fold_times)),
-        "lb_public":         np.nan,
-        "lb_private":        np.nan,
         "artifact_dir":      str((RUNS_DIR / run_id).relative_to(PROJECT_ROOT)),
     }
 
@@ -196,12 +203,43 @@ def run_cv_experiment(
     }
 
     # ------------------------------------------------------------------
-    # 5. Persist
+    # 5. Return result — caller decides whether to save
     # ------------------------------------------------------------------
-    save_run(run_dict, artifacts, run_id)
     print()
     print(f"OOF {run_config['metric_name']}: {oof_score:.4f}")
     print(f"Folds:        {np.mean(fold_scores):.4f} ± {np.std(fold_scores):.4f}")
-    print(f"Saved to:     {RUNS_DIR / run_id}")
+    print()
+    print("Run complete. Call save_experiment(result) to log this run permanently.")
 
-    return run_id
+    return {
+        "run_id":      run_id,
+        "run_dict":    run_dict,
+        "artifacts":   artifacts,
+        "oof_score":   oof_score,
+        "fold_scores": fold_scores,
+    }
+
+
+def save_experiment(result: dict) -> str:
+    """Persist a completed run to disk and append a row to experiments/runs.csv.
+
+    Parameters
+    ----------
+    result : dict
+        The dict returned by run_cv_experiment().
+
+    Returns
+    -------
+    run_id : str
+        Identifier for the saved run.  Use it to locate the artifact directory
+        at experiments/runs/{run_id}/ or to filter runs.csv.
+
+    Why separate from run_cv_experiment
+    ------------------------------------
+    Keeping the save step explicit lets you review fold scores and decide
+    whether a run is worth archiving before paying the I/O cost of writing
+    fold models, OOF arrays, and environment snapshots.
+    """
+    save_run(result["run_dict"], result["artifacts"], result["run_id"])
+    print(f"Saved to: {RUNS_DIR / result['run_id']}")
+    return result["run_id"]
