@@ -15,6 +15,7 @@ import datetime
 import hashlib
 import json
 import platform
+import shutil
 import subprocess
 import sys
 import types as _types
@@ -185,3 +186,51 @@ def load_runs() -> pd.DataFrame:
     if "oof_score" in df.columns:
         df = df.sort_values("oof_score", ascending=False).reset_index(drop=True)
     return df
+
+
+def delete_run(run_id: str) -> None:
+    """Remove a run from runs.csv and delete its artifact directory.
+
+    Both steps are attempted regardless of whether the other succeeds, so a
+    half-persisted run (CSV row present but directory missing, or vice versa)
+    can still be cleaned up cleanly.
+
+    Parameters
+    ----------
+    run_id : str
+        The run ID to delete, as it appears in the run_id column of runs.csv.
+
+    Why
+    ---
+    Provides a single call to fully retract a run — useful after a mis-fired
+    save (wrong config, corrupted data, accidental duplicate) or when pruning
+    old runs to reclaim disk space.
+    """
+    removed_csv = False
+    removed_dir = False
+
+    # --- Remove row from runs.csv ---
+    if RUNS_CSV.exists():
+        df = pd.read_csv(RUNS_CSV)
+        if run_id in df["run_id"].values:
+            df = df[df["run_id"] != run_id]
+            df.to_csv(RUNS_CSV, index=False)
+            removed_csv = True
+        else:
+            print(f"Warning: run_id '{run_id}' not found in runs.csv — skipping CSV step.")
+
+    # --- Delete artifact directory ---
+    run_dir = RUNS_DIR / run_id
+    if run_dir.exists():
+        shutil.rmtree(run_dir)
+        removed_dir = True
+    else:
+        print(f"Warning: artifact directory '{run_dir}' not found — skipping directory step.")
+
+    if removed_csv or removed_dir:
+        parts = []
+        if removed_csv:
+            parts.append("runs.csv row")
+        if removed_dir:
+            parts.append(f"artifact directory ({run_dir})")
+        print(f"Deleted {run_id}: {' and '.join(parts)}.")
