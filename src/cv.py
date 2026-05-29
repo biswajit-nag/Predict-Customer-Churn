@@ -19,6 +19,7 @@ import time
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import roc_auc_score
 
 from src.tracking import (
     DATA_DIR,
@@ -79,6 +80,7 @@ def run_cv_experiment(
     oof_proba        = np.zeros(len(X_train))
     test_proba_folds = np.zeros((len(X_test), cv.n_splits))
     fold_scores, fold_times, fold_models = [], [], []
+    fold_roc_aucs = []
     gain_imps, split_imps = [], []  # LightGBM gain/split; empty for other model families
 
     # ------------------------------------------------------------------
@@ -105,7 +107,9 @@ def run_cv_experiment(
         score = run_config["metric"](
             y_train.iloc[va_idx], (va_proba >= 0.5).astype(int)
         )
+        fold_roc_auc = roc_auc_score(y_train.iloc[va_idx], va_proba)
         fold_scores.append(score)
+        fold_roc_aucs.append(fold_roc_auc)
         fold_times.append(elapsed)
         fold_models.append(model)
 
@@ -114,7 +118,7 @@ def run_cv_experiment(
             gain_imps.append(model.booster_.feature_importance(importance_type="gain"))
             split_imps.append(model.booster_.feature_importance(importance_type="split"))
 
-        print(f"Fold {fold}: {run_config['metric_name']}={score:.4f}  (fit {elapsed:.1f}s)")
+        print(f"Fold {fold}: {run_config['metric_name']}={score:.4f}  roc_auc={fold_roc_auc:.4f}  (fit {elapsed:.1f}s)")
 
     # ------------------------------------------------------------------
     # 3. Aggregate
@@ -126,6 +130,11 @@ def run_cv_experiment(
     # The two agree closely but oof_score is what Kaggle-style leaderboards
     # correlate with (every training row predicted exactly once).
     oof_score = run_config["metric"](y_train, (oof_proba >= 0.5).astype(int))
+
+    # oof_roc_auc: computed directly from probabilities — no threshold needed.
+    # Always logged regardless of the run_config metric, since it is a useful
+    # secondary signal for ranking and calibration.
+    oof_roc_auc = roc_auc_score(y_train, oof_proba)
 
     # Mean gain/split across folds gives a more stable ranking than any single fold.
     feat_imp = None
@@ -166,20 +175,27 @@ def run_cv_experiment(
         "n_test":            len(X_test),
         "n_features":        X_train.shape[1],
         "metric":            run_config["metric_name"],
-        "fold_scores_mean":  float(np.mean(fold_scores)),
-        "fold_scores_std":   float(np.std(fold_scores)),
-        "oof_score":         float(oof_score),
-        "training_time_sec": float(sum(fold_times)),
-        "artifact_dir":      str((RUNS_DIR / run_id).relative_to(PROJECT_ROOT)),
+        "fold_scores_mean":   float(np.mean(fold_scores)),
+        "fold_scores_std":    float(np.std(fold_scores)),
+        "oof_score":          float(oof_score),
+        "oof_roc_auc":        float(oof_roc_auc),
+        "fold_roc_auc_mean":  float(np.mean(fold_roc_aucs)),
+        "fold_roc_auc_std":   float(np.std(fold_roc_aucs)),
+        "training_time_sec":  float(sum(fold_times)),
+        "artifact_dir":       str((RUNS_DIR / run_id).relative_to(PROJECT_ROOT)),
     }
 
     metrics = {
-        "fold_scores":       [float(s) for s in fold_scores],
-        "fold_times_sec":    [float(t) for t in fold_times],
-        "oof_score":         float(oof_score),
-        "fold_scores_mean":  float(np.mean(fold_scores)),
-        "fold_scores_std":   float(np.std(fold_scores)),
-        "training_time_sec": float(sum(fold_times)),
+        "fold_scores":        [float(s) for s in fold_scores],
+        "fold_times_sec":     [float(t) for t in fold_times],
+        "oof_score":          float(oof_score),
+        "fold_scores_mean":   float(np.mean(fold_scores)),
+        "fold_scores_std":    float(np.std(fold_scores)),
+        "oof_roc_auc":        float(oof_roc_auc),
+        "fold_roc_aucs":      [float(r) for r in fold_roc_aucs],
+        "fold_roc_auc_mean":  float(np.mean(fold_roc_aucs)),
+        "fold_roc_auc_std":   float(np.std(fold_roc_aucs)),
+        "training_time_sec":  float(sum(fold_times)),
         "cv_config": {
             "type":         type(cv).__name__,
             "n_splits":     cv.n_splits,
@@ -207,16 +223,19 @@ def run_cv_experiment(
     # ------------------------------------------------------------------
     print()
     print(f"OOF {run_config['metric_name']}: {oof_score:.4f}")
+    print(f"OOF ROC-AUC:  {oof_roc_auc:.4f}")
     print(f"Folds:        {np.mean(fold_scores):.4f} ± {np.std(fold_scores):.4f}")
     print()
     print("Run complete. Call save_experiment(result) to log this run permanently.")
 
     return {
-        "run_id":      run_id,
-        "run_dict":    run_dict,
-        "artifacts":   artifacts,
-        "oof_score":   oof_score,
-        "fold_scores": fold_scores,
+        "run_id":        run_id,
+        "run_dict":      run_dict,
+        "artifacts":     artifacts,
+        "oof_score":     oof_score,
+        "oof_roc_auc":   oof_roc_auc,
+        "fold_scores":   fold_scores,
+        "fold_roc_aucs": fold_roc_aucs,
     }
 
 
