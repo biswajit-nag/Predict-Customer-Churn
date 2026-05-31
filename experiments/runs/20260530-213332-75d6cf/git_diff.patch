@@ -1,0 +1,91 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index b97162d..f5ae2c7 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -31,7 +31,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 18,
++   "execution_count": 29,
+    "id": "294d31b6",
+    "metadata": {},
+    "outputs": [],
+@@ -111,7 +111,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 19,
++   "execution_count": 30,
+    "id": "312819c9",
+    "metadata": {},
+    "outputs": [
+@@ -154,7 +154,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 20,
++   "execution_count": 31,
+    "id": "319fd6dc",
+    "metadata": {},
+    "outputs": [
+@@ -210,7 +210,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 21,
++   "execution_count": 32,
+    "id": "810d9bd5",
+    "metadata": {},
+    "outputs": [
+@@ -249,14 +249,14 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 22,
++   "execution_count": null,
+    "id": "fd25f0b8",
+    "metadata": {},
+    "outputs": [
+     {
+      "data": {
+       "application/vnd.jupyter.widget-view+json": {
+-       "model_id": "eb1f0ae924674be58d7c621e6449af84",
++       "model_id": "dd0a55f696ab4d3bb444cd5c5c48b587",
+        "version_major": 2,
+        "version_minor": 0
+       },
+@@ -266,15 +266,6 @@
+      },
+      "metadata": {},
+      "output_type": "display_data"
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Best CV accuracy : 0.8618\n",
+-      "Best params:\n",
+-      "{'n_estimators': 874, 'learning_rate': 0.15197855742746597, 'num_leaves': 249, 'max_depth': 4, 'min_child_samples': 66, 'subsample': 0.6227117340541225, 'colsample_bytree': 0.5934539080388056, 'reg_alpha': 3.357139007724072e-06, 'reg_lambda': 0.4039666555111604, 'min_split_gain': 0.8858452764689357}\n"
+-     ]
+     }
+    ],
+    "source": [
+@@ -292,7 +283,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 23,
++   "execution_count": null,
+    "id": "162ca2fb",
+    "metadata": {},
+    "outputs": [],
+@@ -320,7 +311,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 24,
++   "execution_count": null,
+    "id": "d3cc65bf",
+    "metadata": {},
+    "outputs": [
