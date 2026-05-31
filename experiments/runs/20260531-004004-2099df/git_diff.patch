@@ -1,0 +1,169 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index 9ba737a..6c994da 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -31,7 +31,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 43,
++   "execution_count": 59,
+    "id": "294d31b6",
+    "metadata": {},
+    "outputs": [],
+@@ -111,7 +111,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 44,
++   "execution_count": 60,
+    "id": "312819c9",
+    "metadata": {},
+    "outputs": [
+@@ -154,7 +154,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 45,
++   "execution_count": 61,
+    "id": "319fd6dc",
+    "metadata": {},
+    "outputs": [
+@@ -210,7 +210,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 46,
++   "execution_count": 62,
+    "id": "810d9bd5",
+    "metadata": {},
+    "outputs": [
+@@ -235,23 +235,88 @@
+    "cell_type": "markdown",
+    "id": "fb240014",
+    "metadata": {},
+-   "source": "### Hyperparameter tuning + run configuration\n\nTwo cells below:\n\n1. **Tuning cell** â€” runs an Optuna study using `catboost_objective` from\n   `src/tuning.py` (3-fold inner CV, 50 trials). Run this once to find best\n   params; re-run any time you want a fresh search.\n2. **Run config cell** â€” assembles `run_config` from the study's best params\n   and passes it to `run_cv_experiment` in the next section."
++   "source": [
++    "### Hyperparameter tuning + run configuration\n",
++    "\n",
++    "Two cells below:\n",
++    "\n",
++    "1. **Tuning cell** â€” runs an Optuna study using `catboost_objective` from\n",
++    "   `src/tuning.py` (3-fold inner CV, 50 trials). Run this once to find best\n",
++    "   params; re-run any time you want a fresh search.\n",
++    "2. **Run config cell** â€” assembles `run_config` from the study's best params\n",
++    "   and passes it to `run_cv_experiment` in the next section."
++   ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 63,
+    "id": "fd25f0b8",
+    "metadata": {},
+-   "outputs": [],
+-   "source": "import optuna\nfrom src.tuning import catboost_objective\n\noptuna.logging.set_verbosity(optuna.logging.WARNING)\n\ncatboost_study = optuna.create_study(direction='maximize')\ncatboost_study.optimize(catboost_objective(X_train, y_train), n_trials=50, show_progress_bar=True)\n\nprint(f\"Best CV accuracy : {catboost_study.best_value:.4f}\")\nprint(f\"Best params:\\n{catboost_study.best_params}\")"
++   "outputs": [
++    {
++     "data": {
++      "application/vnd.jupyter.widget-view+json": {
++       "model_id": "e8e2deba5fc34d56a26b0a5461868039",
++       "version_major": 2,
++       "version_minor": 0
++      },
++      "text/plain": [
++       "  0%|          | 0/50 [00:00<?, ?it/s]"
++      ]
++     },
++     "metadata": {},
++     "output_type": "display_data"
++    },
++    {
++     "name": "stdout",
++     "output_type": "stream",
++     "text": [
++      "Best CV accuracy : 0.8619\n",
++      "Best params:\n",
++      "{'iterations': 861, 'learning_rate': 0.14944702939637594, 'depth': 4, 'l2_leaf_reg': 2.9506460739514484, 'min_data_in_leaf': 39, 'random_strength': 1.9569985425971672, 'bagging_temperature': 0.4672964983695288}\n"
++     ]
++    }
++   ],
++   "source": [
++    "import optuna\n",
++    "from src.tuning import catboost_objective\n",
++    "\n",
++    "optuna.logging.set_verbosity(optuna.logging.WARNING)\n",
++    "\n",
++    "catboost_study = optuna.create_study(direction='maximize')\n",
++    "catboost_study.optimize(catboost_objective(X_train, y_train), n_trials=50, show_progress_bar=True)\n",
++    "\n",
++    "print(f\"Best CV accuracy : {catboost_study.best_value:.4f}\")\n",
++    "print(f\"Best params:\\n{catboost_study.best_params}\")"
++   ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 64,
+    "id": "162ca2fb",
+    "metadata": {},
+    "outputs": [],
+-   "source": "from catboost import CatBoostClassifier\n\n# Fixed non-tunable flags are excluded from the Optuna search space (see src/tuning.py)\n# and must be added back before passing params to the model.\ncatboost_params = dict(catboost_study.best_params)\ncatboost_params.update({'verbose': 0})\n\nrun_config = {\n    'model_factory': lambda params: CatBoostClassifier(**params),\n    'params':        catboost_params,\n    'metric':        accuracy_score,\n    'metric_name':   'accuracy',\n    'cv':            StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n    'tag':           'catboost-optuna-best',\n    'notes':         'CatBoostClassifier with Optuna best params (50 trials, 3-fold inner CV).',\n    'parent_run_id': '',\n    'save_models':   True,\n    'data_version':  DATA_VERSION,\n}"
++   "source": [
++    "from catboost import CatBoostClassifier\n",
++    "\n",
++    "# Fixed non-tunable flags are excluded from the Optuna search space (see src/tuning.py)\n",
++    "# and must be added back before passing params to the model.\n",
++    "catboost_params = dict(catboost_study.best_params)\n",
++    "catboost_params.update({'verbose': 0})\n",
++    "\n",
++    "run_config = {\n",
++    "    'model_factory': lambda params: CatBoostClassifier(**params),\n",
++    "    'params':        catboost_params,\n",
++    "    'metric':        accuracy_score,\n",
++    "    'metric_name':   'accuracy',\n",
++    "    'cv':            StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n",
++    "    'tag':           'catboost-optuna-best',\n",
++    "    'notes':         'CatBoostClassifier with Optuna best params (50 trials, 3-fold inner CV).',\n",
++    "    'parent_run_id': '',\n",
++    "    'save_models':   True,\n",
++    "    'data_version':  DATA_VERSION,\n",
++    "}"
++   ]
+   },
+   {
+    "cell_type": "code",
+@@ -263,20 +328,13 @@
+      "name": "stdout",
+      "output_type": "stream",
+      "text": [
+-      "Run ID: 20260530-213332-75d6cf\n",
+-      "Tag:    lgbm-optuna-best\n",
+-      "\n",
+-      "Fold 0: accuracy=0.8612  roc_auc=0.9161  (fit 5.3s)\n",
+-      "Fold 1: accuracy=0.8616  roc_auc=0.9173  (fit 3.9s)\n",
+-      "Fold 2: accuracy=0.8618  roc_auc=0.9166  (fit 3.7s)\n",
+-      "Fold 3: accuracy=0.8630  roc_auc=0.9174  (fit 3.7s)\n",
+-      "Fold 4: accuracy=0.8610  roc_auc=0.9148  (fit 3.6s)\n",
+-      "\n",
+-      "OOF accuracy: 0.8617\n",
+-      "OOF ROC-AUC:  0.9164\n",
+-      "Folds:        0.8617 Â± 0.0007\n",
++      "Run ID: 20260531-004004-2099df\n",
++      "Tag:    catboost-optuna-best\n",
+       "\n",
+-      "Run complete. Call save_experiment(result) to log this run permanently.\n"
++      "Fold 0: accuracy=0.8612  roc_auc=0.9162  (fit 31.6s)\n",
++      "Fold 1: accuracy=0.8615  roc_auc=0.9171  (fit 31.9s)\n",
++      "Fold 2: accuracy=0.8620  roc_auc=0.9166  (fit 32.1s)\n",
++      "Fold 3: accuracy=0.8632  roc_auc=0.9177  (fit 31.6s)\n"
+      ]
+     }
+    ],
+@@ -567,4 +625,4 @@
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+-}
+\ No newline at end of file
++}
