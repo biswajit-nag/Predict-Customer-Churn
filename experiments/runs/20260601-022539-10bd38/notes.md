@@ -1,0 +1,1 @@
+TabM (pytabkit TabM_D_Classifier, default architecture) on Kaggle T4 GPU. torch=2.10.0+cu128, pytabkit=1.7.3. Data regenerated on-platform from competition CSVs — data_hash will differ from local runs. GPU non-determinism means OOF score is not bit-reproducible locally.
