@@ -1,0 +1,1 @@
+RealMLP (pytabkit RealMLP_TD_Classifier, tuned defaults) on Kaggle T4 GPU, full 594k training set. OOF ROC-AUC vs untuned LGBM ~0.91 / tuned ~0.92. pytabkit=1.7.3, torch=2.10.0+cu128. Data regenerated on-platform - data_hash differs from local runs; GPU run not bit-reproducible.
