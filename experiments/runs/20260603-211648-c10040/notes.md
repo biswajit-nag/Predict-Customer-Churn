@@ -1,0 +1,1 @@
+TabPFN-2.5 (untuned) fast-EDA pass on Kaggle T4 GPU, stratified 50k subsample (TabPFN row cap). OOF ROC-AUC read as a second opinion vs untuned LGBM ~0.91. tabpfn=8.0.6, torch=2.10.0+cu128. Data regenerated on-platform — data_hash differs from local runs; GPU run not bit-reproducible. SHAP intentionally skipped.
