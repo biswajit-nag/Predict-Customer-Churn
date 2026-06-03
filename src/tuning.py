@@ -44,7 +44,7 @@ def lgbm_objective(X, y, cv=None):
     Returns
     -------
     objective : callable(trial) -> float
-        Mean 3-fold accuracy over the suggested hyperparameters.
+        Mean 3-fold ROC AUC over the suggested hyperparameters.
     """
     from lightgbm import LGBMClassifier
 
@@ -65,7 +65,7 @@ def lgbm_objective(X, y, cv=None):
             "min_split_gain":    trial.suggest_float("min_split_gain", 0.0, 1.0),
             "verbose":           -1,  # suppress per-tree output; not tunable
         }
-        scores = cross_val_score(LGBMClassifier(**params), X, y, cv=_cv, scoring="accuracy")
+        scores = cross_val_score(LGBMClassifier(**params), X, y, cv=_cv, scoring="roc_auc")
         return scores.mean()
 
     return objective
@@ -82,7 +82,7 @@ def xgb_objective(X, y, cv=None):
     Returns
     -------
     objective : callable(trial) -> float
-        Mean 3-fold accuracy over the suggested hyperparameters.
+        Mean 3-fold ROC AUC over the suggested hyperparameters.
     """
     from xgboost import XGBClassifier
 
@@ -102,7 +102,7 @@ def xgb_objective(X, y, cv=None):
             "verbosity":        0,       # not tunable
             "eval_metric":      "logloss",  # not tunable
         }
-        scores = cross_val_score(XGBClassifier(**params), X, y, cv=_cv, scoring="accuracy")
+        scores = cross_val_score(XGBClassifier(**params), X, y, cv=_cv, scoring="roc_auc")
         return scores.mean()
 
     return objective
@@ -119,7 +119,7 @@ def catboost_objective(X, y, cv=None):
     Returns
     -------
     objective : callable(trial) -> float
-        Mean 3-fold accuracy over the suggested hyperparameters.
+        Mean 3-fold ROC AUC over the suggested hyperparameters.
     """
     from catboost import CatBoostClassifier
 
@@ -136,7 +136,7 @@ def catboost_objective(X, y, cv=None):
             "bagging_temperature": trial.suggest_float("bagging_temperature", 0.0, 1.0),
             "verbose":             0,  # not tunable
         }
-        scores = cross_val_score(CatBoostClassifier(**params), X, y, cv=_cv, scoring="accuracy")
+        scores = cross_val_score(CatBoostClassifier(**params), X, y, cv=_cv, scoring="roc_auc")
         return scores.mean()
 
     return objective
