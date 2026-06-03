@@ -1,0 +1,105 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index df9fbc1..a69159e 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -235,15 +235,60 @@
+    "cell_type": "markdown",
+    "id": "5e3c806e",
+    "metadata": {},
+-   "source": "### Hyperparameter tuning + run configuration\n\nTwo cells below:\n\n1. **Tuning cell** â€” runs an Optuna study using `lgbm_objective` from\n   `src/tuning.py` (3-fold inner CV, 50 trials). Run this once to find best\n   params; re-run any time you want a fresh search.\n2. **Run config cell** â€” assembles `run_config` from the study's best params\n   and passes it to `run_cv_experiment` in the next section."
++   "source": [
++    "### Hyperparameter tuning + run configuration\n",
++    "\n",
++    "Two cells below:\n",
++    "\n",
++    "1. **Tuning cell** â€” runs an Optuna study using `lgbm_objective` from\n",
++    "   `src/tuning.py` (3-fold inner CV, 50 trials). Run this once to find best\n",
++    "   params; re-run any time you want a fresh search.\n",
++    "2. **Run config cell** â€” assembles `run_config` from the study's best params\n",
++    "   and passes it to `run_cv_experiment` in the next section."
++   ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 20,
+    "id": "996759da",
+    "metadata": {},
+-   "outputs": [],
+-   "source": "import optuna\nfrom src.tuning import lgbm_objective\n\noptuna.logging.set_verbosity(optuna.logging.WARNING)\n\nlgbm_study = optuna.create_study(direction='maximize')\nlgbm_study.optimize(lgbm_objective(X_train, y_train), n_trials=50, show_progress_bar=True)\n\nprint(f\"Best CV ROC AUC : {lgbm_study.best_value:.4f}\")\nprint(f\"Best params:\\n{lgbm_study.best_params}\")"
++   "outputs": [
++    {
++     "data": {
++      "application/vnd.jupyter.widget-view+json": {
++       "model_id": "48110b1040d94e81a467f3bd379ab886",
++       "version_major": 2,
++       "version_minor": 0
++      },
++      "text/plain": [
++       "  0%|          | 0/50 [00:00<?, ?it/s]"
++      ]
++     },
++     "metadata": {},
++     "output_type": "display_data"
++    },
++    {
++     "name": "stdout",
++     "output_type": "stream",
++     "text": [
++      "Best CV ROC AUC : 0.9162\n",
++      "Best params:\n",
++      "{'n_estimators': 665, 'learning_rate': 0.05067729655705579, 'num_leaves': 36, 'max_depth': 8, 'min_child_samples': 112, 'subsample': 0.7517747639988729, 'colsample_bytree': 0.5961954564850046, 'reg_alpha': 6.50297729737935e-08, 'reg_lambda': 3.3241353423026616e-06, 'min_split_gain': 0.48045689888127}\n"
++     ]
++    }
++   ],
++   "source": [
++    "import optuna\n",
++    "from src.tuning import lgbm_objective\n",
++    "\n",
++    "optuna.logging.set_verbosity(optuna.logging.WARNING)\n",
++    "\n",
++    "lgbm_study = optuna.create_study(direction='maximize')\n",
++    "lgbm_study.optimize(lgbm_objective(X_train, y_train), n_trials=50, show_progress_bar=True)\n",
++    "\n",
++    "print(f\"Best CV ROC AUC : {lgbm_study.best_value:.4f}\")\n",
++    "print(f\"Best params:\\n{lgbm_study.best_params}\")"
++   ]
+   },
+   {
+    "cell_type": "code",
+@@ -251,7 +296,27 @@
+    "id": "f5d83430",
+    "metadata": {},
+    "outputs": [],
+-   "source": "from lightgbm import LGBMClassifier\n\n# Fixed non-tunable flags are excluded from the Optuna search space (see src/tuning.py)\n# and must be added back before passing params to the model.\nlgbm_params = dict(lgbm_study.best_params)\nlgbm_params.update({'subsample_freq': 1, 'verbose': -1})\n\nrun_config = {\n    'model_factory': lambda params: LGBMClassifier(**params),\n    'params':        lgbm_params,\n    'metric':        accuracy_score,\n    'metric_name':   'accuracy',\n    'cv':            StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n    'tag':           'lgbm-optuna-rocauc',\n    'notes':         'LGBMClassifier with Optuna best params (50 trials, 3-fold inner CV, ROC-AUC tuning objective).',\n    'parent_run_id': '',\n    'save_models':   True,\n    'data_version':  DATA_VERSION,\n}"
++   "source": [
++    "from lightgbm import LGBMClassifier\n",
++    "\n",
++    "# Fixed non-tunable flags are excluded from the Optuna search space (see src/tuning.py)\n",
++    "# and must be added back before passing params to the model.\n",
++    "lgbm_params = dict(lgbm_study.best_params)\n",
++    "lgbm_params.update({'subsample_freq': 1, 'verbose': -1})\n",
++    "\n",
++    "run_config = {\n",
++    "    'model_factory': lambda params: LGBMClassifier(**params),\n",
++    "    'params':        lgbm_params,\n",
++    "    'metric':        accuracy_score,\n",
++    "    'metric_name':   'accuracy',\n",
++    "    'cv':            StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n",
++    "    'tag':           'lgbm-optuna-rocauc',\n",
++    "    'notes':         'LGBMClassifier with Optuna best params (50 trials, 3-fold inner CV, ROC-AUC tuning objective).',\n",
++    "    'parent_run_id': '',\n",
++    "    'save_models':   True,\n",
++    "    'data_version':  DATA_VERSION,\n",
++    "}"
++   ]
+   },
+   {
+    "cell_type": "code",
+@@ -609,4 +674,4 @@
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+-}
+\ No newline at end of file
++}
