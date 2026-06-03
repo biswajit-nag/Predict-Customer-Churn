@@ -1,0 +1,1 @@
+CatBoostClassifier with Optuna best params (50 trials, 3-fold inner CV, ROC-AUC tuning objective).
