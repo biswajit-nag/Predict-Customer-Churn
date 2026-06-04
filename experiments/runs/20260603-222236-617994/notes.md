@@ -1,0 +1,1 @@
+TabICL (untuned TabICLClassifier) fast-EDA pass on Kaggle T4 GPU, stratified 50k subsample. OOF ROC-AUC read as a second opinion vs untuned LGBM ~0.91. tabicl=2.1.1, torch=2.10.0+cu128. Data regenerated on-platform; GPU not bit-reproducible.
