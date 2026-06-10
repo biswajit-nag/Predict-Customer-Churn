@@ -79,8 +79,19 @@ def git_info() -> dict:
     Degrades gracefully outside a git repo (returns empty strings).
     """
     def _run(args: list[str]) -> str:
-        r = subprocess.run(["git", *args], capture_output=True, text=True, check=False)
-        return r.stdout.strip() if r.returncode == 0 else ""
+        # Force UTF-8: git emits UTF-8, but text=True otherwise decodes with the
+        # locale default (cp1252 on Windows), which crashes the reader thread on
+        # any non-cp1252 byte (e.g. em dashes / ≤ in a diff) and leaves stdout=None.
+        # errors="replace" is a belt-and-suspenders guard against stray bytes.
+        r = subprocess.run(
+            ["git", *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        return r.stdout.strip() if r.returncode == 0 and r.stdout is not None else ""
 
     diff_text = _run(["diff", "HEAD"])
     return {

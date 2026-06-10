@@ -1,0 +1,1 @@
+LGBM GBDT, Optuna refinement study seeded from e4e8d5d best (50 trials, 3-fold inner CV).
