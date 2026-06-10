@@ -1,0 +1,1 @@
+LGBM, run 20260609-222839-80b124 params (lgbm-refined trial 25), native categorical encoding (fe_v2_native).
