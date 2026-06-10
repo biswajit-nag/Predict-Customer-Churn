@@ -1,0 +1,1 @@
+XGBoost GBDT, best params from an Optuna refinement study seeded with run 20260530-234246-15ca1c (xgb-optuna-acc) on fe_v3_native (high-cardinality crosses + charge ratios, native categorical encoding via enable_categorical=True).
