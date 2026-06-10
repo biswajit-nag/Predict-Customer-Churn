@@ -1,0 +1,86 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index a59a895..1270020 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -319,7 +319,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 17,
+    "id": "b19a29ca",
+    "metadata": {},
+    "outputs": [
+@@ -336,6 +336,27 @@
+      },
+      "metadata": {},
+      "output_type": "display_data"
++    },
++    {
++     "name": "stdout",
++     "output_type": "stream",
++     "text": [
++      "Best inner-CV ROC AUC: 0.916173  (trial 53)\n",
++      "  max_depth          9\n",
++      "  n_estimators       1500\n",
++      "  learning_rate      0.019508801837708797\n",
++      "  num_leaves         97\n",
++      "  min_child_samples  112\n",
++      "  subsample          0.9454422504316359\n",
++      "  colsample_bytree   0.5186033152623584\n",
++      "  reg_alpha          0.02397814135776312\n",
++      "  reg_lambda         0.3805768907927061\n",
++      "  min_split_gain     0.8666688456858747\n",
++      "  cat_smooth         271.9461294596572\n",
++      "  cat_l2             176.68542292497733\n",
++      "  min_data_per_group 10\n",
++      "  max_cat_threshold  136\n"
++     ]
+     }
+    ],
+    "source": [
+@@ -451,7 +472,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 18,
+    "id": "996759da",
+    "metadata": {},
+    "outputs": [],
+@@ -469,7 +490,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 19,
+    "id": "f5d83430",
+    "metadata": {},
+    "outputs": [],
+@@ -512,20 +533,13 @@
+      "name": "stdout",
+      "output_type": "stream",
+      "text": [
+-      "Run ID: 20260610-123628-24ca03\n",
+-      "Tag:    lgbm-refined-fe_v3-study\n",
+-      "\n",
+-      "Fold 0: accuracy=0.8606  roc_auc=0.9154  (fit 9.7s)\n",
+-      "Fold 1: accuracy=0.8614  roc_auc=0.9165  (fit 9.5s)\n",
+-      "Fold 2: accuracy=0.8608  roc_auc=0.9158  (fit 9.5s)\n",
+-      "Fold 3: accuracy=0.8617  roc_auc=0.9168  (fit 9.4s)\n",
+-      "Fold 4: accuracy=0.8607  roc_auc=0.9143  (fit 9.4s)\n",
+-      "\n",
+-      "OOF accuracy: 0.8610\n",
+-      "OOF ROC-AUC:  0.9158\n",
+-      "Folds:        0.8610 ± 0.0005\n",
++      "Run ID: 20260610-175448-197ff7\n",
++      "Tag:    lgbm-catreg-fe_v3-study\n",
+       "\n",
+-      "Run complete. Call save_experiment(result) to log this run permanently.\n"
++      "Fold 0: accuracy=0.8613  roc_auc=0.9161  (fit 18.6s)\n",
++      "Fold 1: accuracy=0.8618  roc_auc=0.9172  (fit 18.5s)\n",
++      "Fold 2: accuracy=0.8615  roc_auc=0.9165  (fit 19.0s)\n",
++      "Fold 3: accuracy=0.8628  roc_auc=0.9176  (fit 18.6s)\n"
+      ]
+     }
+    ],
