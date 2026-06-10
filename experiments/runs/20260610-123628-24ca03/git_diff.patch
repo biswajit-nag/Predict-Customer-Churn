@@ -1,0 +1,280 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index 0eb88c3..3006794 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -31,7 +31,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 91,
++   "execution_count": 1,
+    "id": "d12a1abe",
+    "metadata": {},
+    "outputs": [],
+@@ -111,7 +111,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 92,
++   "execution_count": 2,
+    "id": "5d414eb8",
+    "metadata": {},
+    "outputs": [
+@@ -162,7 +162,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 93,
++   "execution_count": 3,
+    "id": "b9dd0436",
+    "metadata": {},
+    "outputs": [
+@@ -255,7 +255,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 94,
++   "execution_count": 4,
+    "id": "fd98eb46",
+    "metadata": {},
+    "outputs": [
+@@ -280,15 +280,118 @@
+    "cell_type": "markdown",
+    "id": "df423065",
+    "metadata": {},
+-   "source": "### Optuna study — LightGBM refinement\n\nRe-searches the LightGBM hyperparameters on the `fe_v3_native` data, which carries\nthe high-cardinality crosses. LightGBM splits on the category-dtype columns directly\n(it auto-detects pandas `category` dtype), so there is no encoding step. Trial 0\nre-enqueues the best params from run `20260609-222839-80b124` (lgbm-refined-best)\nthrough `enqueue_trial`, so the study starts at that known-good config on the\ninner-CV ROC-AUC and can only improve from there.\n\nThis is the apples-to-apples test of whether the fe_v3 crosses carry any marginal\nsignal for LightGBM: the earlier fe_v3 LGBM runs (`20260610-032427-a495a7`,\n`20260610-040114-9a5b27`) merely *pinned* params tuned on fe_v1 / fe_v2, so they\ncould not exploit the enlarged feature space. Here the search runs directly on fe_v3.\n\nBudget: 50 trials × 3-fold CV on 594k rows — roughly 15–25 min on CPU.\n\nThe run config below pins `run_config['params']` to `lgbm_study.best_params`, so run\nthis study first, then the run cell."
++   "source": [
++    "### Optuna study — LightGBM refinement\n",
++    "\n",
++    "Re-searches the LightGBM hyperparameters on the `fe_v3_native` data, which carries\n",
++    "the high-cardinality crosses. LightGBM splits on the category-dtype columns directly\n",
++    "(it auto-detects pandas `category` dtype), so there is no encoding step. Trial 0\n",
++    "re-enqueues the best params from run `20260609-222839-80b124` (lgbm-refined-best)\n",
++    "through `enqueue_trial`, so the study starts at that known-good config on the\n",
++    "inner-CV ROC-AUC and can only improve from there.\n",
++    "\n",
++    "This is the apples-to-apples test of whether the fe_v3 crosses carry any marginal\n",
++    "signal for LightGBM: the earlier fe_v3 LGBM runs (`20260610-032427-a495a7`,\n",
++    "`20260610-040114-9a5b27`) merely *pinned* params tuned on fe_v1 / fe_v2, so they\n",
++    "could not exploit the enlarged feature space. Here the search runs directly on fe_v3.\n",
++    "\n",
++    "Budget: 50 trials × 3-fold CV on 594k rows — roughly 15–25 min on CPU.\n",
++    "\n",
++    "The run config below pins `run_config['params']` to `lgbm_study.best_params`, so run\n",
++    "this study first, then the run cell."
++   ]
+   },
+   {
+    "cell_type": "code",
+    "execution_count": null,
+    "id": "b19a29ca",
+    "metadata": {},
+-   "outputs": [],
+-   "source": "# --- Optuna LightGBM refinement study ---\n# Re-searches the LightGBM hyperparameters on the fe_v3_native data. LightGBM splits\n# on the category-dtype columns (including the high-cardinality crosses) natively — it\n# auto-detects pandas `category` dtype — so there is no encoding step. Trial 0 re-enqueues\n# the best params from run 20260609-222839-80b124 (lgbm-refined-best) so the study starts\n# at a known-good config and can only improve on the inner-CV ROC-AUC.\n\nimport optuna\nfrom lightgbm import LGBMClassifier\nfrom sklearn.model_selection import cross_val_score\n\noptuna.logging.set_verbosity(optuna.logging.WARNING)\n\ninner_cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)  # matches src/tuning.py\n\n# Fixed (non-tunable) flags. subsample_freq=1 is required for subsample (bagging) to take\n# effect; verbose=-1 quiets per-tree output. Kept out of the search space (and out of\n# best_params) — the run-config cell below merges them back in when it instantiates the\n# final model.\nLGBM_FIXED = dict(subsample_freq=1, verbose=-1)\n\n\ndef lgbm_refined_objective(trial):\n    params = {\n        'n_estimators':      trial.suggest_int('n_estimators', 400, 1500),\n        'learning_rate':     trial.suggest_float('learning_rate', 0.01, 0.3, log=True),\n        'num_leaves':        trial.suggest_int('num_leaves', 20, 300),\n        'max_depth':         trial.suggest_int('max_depth', 3, 12),\n        'min_child_samples': trial.suggest_int('min_child_samples', 10, 200),\n        'subsample':         trial.suggest_float('subsample', 0.5, 1.0),\n        'colsample_bytree':  trial.suggest_float('colsample_bytree', 0.5, 1.0),\n        'reg_alpha':         trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),\n        'reg_lambda':        trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),\n        'min_split_gain':    trial.suggest_float('min_split_gain', 0.0, 1.0),\n        **LGBM_FIXED,\n    }\n    scores = cross_val_score(LGBMClassifier(**params), X_train, y_train,\n                             cv=inner_cv, scoring='roc_auc')\n    return scores.mean()\n\n\nlgbm_study = optuna.create_study(\n    study_name='lgbm-refined-fe_v3',\n    direction='maximize',\n    sampler=optuna.samplers.TPESampler(seed=42),\n)\n\n# Trial 0 reproduces the 20260609-222839-80b124 optimum (lgbm-refined-best params) so\n# the study starts at that config on the inner-CV metric. The search bounds were widened\n# (n_estimators up to 1500) so this seed sits strictly inside the space.\nlgbm_study.enqueue_trial({\n    'n_estimators':      1310,\n    'learning_rate':     0.05582055958441355,\n    'num_leaves':        32,\n    'max_depth':         4,\n    'min_child_samples': 68,\n    'subsample':         0.8714292912804658,\n    'colsample_bytree':  0.5758016735537286,\n    'reg_alpha':         0.8705806473560297,\n    'reg_lambda':        0.009553349549964198,\n    'min_split_gain':    0.4839131554160747,\n})\n\nlgbm_study.optimize(lgbm_refined_objective, n_trials=50, show_progress_bar=True)\n\nprint(f'Best inner-CV ROC AUC: {lgbm_study.best_value:.6f}  (trial {lgbm_study.best_trial.number})')\nfor k, v in lgbm_study.best_params.items():\n    print(f'  {k:18s} {v}')"
++   "outputs": [
++    {
++     "data": {
++      "application/vnd.jupyter.widget-view+json": {
++       "model_id": "666d54fab7f443a7974332395bd58d1c",
++       "version_major": 2,
++       "version_minor": 0
++      },
++      "text/plain": [
++       "  0%|          | 0/50 [00:00<?, ?it/s]"
++      ]
++     },
++     "metadata": {},
++     "output_type": "display_data"
++    }
++   ],
++   "source": [
++    "# --- Optuna LightGBM refinement study ---\n",
++    "# Re-searches the LightGBM hyperparameters on the fe_v3_native data. LightGBM splits\n",
++    "# on the category-dtype columns (including the high-cardinality crosses) natively — it\n",
++    "# auto-detects pandas `category` dtype — so there is no encoding step. Trial 0 re-enqueues\n",
++    "# the best params from run 20260609-222839-80b124 (lgbm-refined-best) so the study starts\n",
++    "# at a known-good config and can only improve on the inner-CV ROC-AUC.\n",
++    "\n",
++    "import optuna\n",
++    "from lightgbm import LGBMClassifier\n",
++    "from sklearn.model_selection import cross_val_score\n",
++    "\n",
++    "optuna.logging.set_verbosity(optuna.logging.WARNING)\n",
++    "\n",
++    "inner_cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)  # matches src/tuning.py\n",
++    "\n",
++    "# Fixed (non-tunable) flags. subsample_freq=1 is required for subsample (bagging) to take\n",
++    "# effect; verbose=-1 quiets per-tree output. Kept out of the search space (and out of\n",
++    "# best_params) — the run-config cell below merges them back in when it instantiates the\n",
++    "# final model.\n",
++    "LGBM_FIXED = dict(subsample_freq=1, verbose=-1)\n",
++    "\n",
++    "\n",
++    "def lgbm_refined_objective(trial):\n",
++    "    params = {\n",
++    "        'n_estimators':      trial.suggest_int('n_estimators', 400, 1500),\n",
++    "        'learning_rate':     trial.suggest_float('learning_rate', 0.01, 0.3, log=True),\n",
++    "        'num_leaves':        trial.suggest_int('num_leaves', 20, 300),\n",
++    "        'max_depth':         trial.suggest_int('max_depth', 3, 12),\n",
++    "        'min_child_samples': trial.suggest_int('min_child_samples', 10, 200),\n",
++    "        'subsample':         trial.suggest_float('subsample', 0.5, 1.0),\n",
++    "        'colsample_bytree':  trial.suggest_float('colsample_bytree', 0.5, 1.0),\n",
++    "        'reg_alpha':         trial.suggest_float('reg_alpha', 1e-8, 10.0, log=True),\n",
++    "        'reg_lambda':        trial.suggest_float('reg_lambda', 1e-8, 10.0, log=True),\n",
++    "        'min_split_gain':    trial.suggest_float('min_split_gain', 0.0, 1.0),\n",
++    "        **LGBM_FIXED,\n",
++    "    }\n",
++    "    scores = cross_val_score(LGBMClassifier(**params), X_train, y_train,\n",
++    "                             cv=inner_cv, scoring='roc_auc')\n",
++    "    return scores.mean()\n",
++    "\n",
++    "\n",
++    "lgbm_study = optuna.create_study(\n",
++    "    study_name='lgbm-refined-fe_v3',\n",
++    "    direction='maximize',\n",
++    "    sampler=optuna.samplers.TPESampler(seed=42),\n",
++    ")\n",
++    "\n",
++    "# Trial 0 reproduces the 20260609-222839-80b124 optimum (lgbm-refined-best params) so\n",
++    "# the study starts at that config on the inner-CV metric. The search bounds were widened\n",
++    "# (n_estimators up to 1500) so this seed sits strictly inside the space.\n",
++    "lgbm_study.enqueue_trial({\n",
++    "    'n_estimators':      1310,\n",
++    "    'learning_rate':     0.05582055958441355,\n",
++    "    'num_leaves':        32,\n",
++    "    'max_depth':         4,\n",
++    "    'min_child_samples': 68,\n",
++    "    'subsample':         0.8714292912804658,\n",
++    "    'colsample_bytree':  0.5758016735537286,\n",
++    "    'reg_alpha':         0.8705806473560297,\n",
++    "    'reg_lambda':        0.009553349549964198,\n",
++    "    'min_split_gain':    0.4839131554160747,\n",
++    "})\n",
++    "\n",
++    "lgbm_study.optimize(lgbm_refined_objective, n_trials=50, show_progress_bar=True)\n",
++    "\n",
++    "print(f'Best inner-CV ROC AUC: {lgbm_study.best_value:.6f}  (trial {lgbm_study.best_trial.number})')\n",
++    "for k, v in lgbm_study.best_params.items():\n",
++    "    print(f'  {k:18s} {v}')"
++   ]
+   },
+   {
+    "cell_type": "markdown",
+@@ -308,7 +411,17 @@
+    "id": "996759da",
+    "metadata": {},
+    "outputs": [],
+-   "source": "# --- No category realignment needed for LightGBM ---\n# Unlike XGBoost (whose native path reads pandas .cat.codes directly and so needs the\n# train/test category codes aligned by hand), LightGBM stores the training categories\n# (pandas_categorical) at fit time and remaps each prediction frame onto them by category\n# *value*, turning unseen test-only levels into missing. So X_test is consumed as-is — no\n# set_categories pass. Kept as an explicit no-op cell to keep the run-config layout parallel\n# to the XGB study, and so re-running top-to-bottom after the XGB study leaves no stale\n# code-aligned X_test in scope.\nX_test = test_df[encoded_features]"
++   "source": [
++    "# --- No category realignment needed for LightGBM ---\n",
++    "# Unlike XGBoost (whose native path reads pandas .cat.codes directly and so needs the\n",
++    "# train/test category codes aligned by hand), LightGBM stores the training categories\n",
++    "# (pandas_categorical) at fit time and remaps each prediction frame onto them by category\n",
++    "# *value*, turning unseen test-only levels into missing. So X_test is consumed as-is — no\n",
++    "# set_categories pass. Kept as an explicit no-op cell to keep the run-config layout parallel\n",
++    "# to the XGB study, and so re-running top-to-bottom after the XGB study leaves no stale\n",
++    "# code-aligned X_test in scope.\n",
++    "X_test = test_df[encoded_features]"
++   ]
+   },
+   {
+    "cell_type": "code",
+@@ -316,7 +429,33 @@
+    "id": "f5d83430",
+    "metadata": {},
+    "outputs": [],
+-   "source": "# --- Run config (edit this per experiment) ---\n# LightGBM on the fe_v3_native features. LightGBM splits on the category-dtype columns —\n# including the high-cardinality crosses — natively (auto-detected pandas `category` dtype),\n# so there is no pipeline / encoding step. lgbm_study.best_params carries only the tuned\n# hyperparameters, so the fixed flags (LGBM_FIXED, defined in the Optuna cell above) are\n# merged back in here via the model factory.\nfrom lightgbm import LGBMClassifier\n\nrun_config = {\n    'model_factory': lambda params: LGBMClassifier(**params, **LGBM_FIXED),\n    'params':        lgbm_study.best_params,\n    'metric':        accuracy_score,\n    'metric_name':   'accuracy',\n    'cv':            StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n    'tag':           'lgbm-refined-fe_v3-study',\n    'notes':         'LightGBM GBDT, best params from a fresh Optuna refinement study run '\n                     'directly on fe_v3_native (50 trials, 3-fold inner CV, ROC-AUC objective), '\n                     'trial 0 seeded from run 20260609-222839-80b124 (lgbm-refined-best). Tests '\n                     'whether the high-cardinality crosses + charge ratios carry marginal signal '\n                     'once params are tuned on the enlarged feature space rather than pinned '\n                     'from fe_v1 / fe_v2.',\n    'parent_run_id': '20260609-222839-80b124',\n    'save_models':   False,\n    'data_version':  DATA_VERSION,\n}"
++   "source": [
++    "# --- Run config (edit this per experiment) ---\n",
++    "# LightGBM on the fe_v3_native features. LightGBM splits on the category-dtype columns —\n",
++    "# including the high-cardinality crosses — natively (auto-detected pandas `category` dtype),\n",
++    "# so there is no pipeline / encoding step. lgbm_study.best_params carries only the tuned\n",
++    "# hyperparameters, so the fixed flags (LGBM_FIXED, defined in the Optuna cell above) are\n",
++    "# merged back in here via the model factory.\n",
++    "from lightgbm import LGBMClassifier\n",
++    "\n",
++    "run_config = {\n",
++    "    'model_factory': lambda params: LGBMClassifier(**params, **LGBM_FIXED),\n",
++    "    'params':        lgbm_study.best_params,\n",
++    "    'metric':        accuracy_score,\n",
++    "    'metric_name':   'accuracy',\n",
++    "    'cv':            StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n",
++    "    'tag':           'lgbm-refined-fe_v3-study',\n",
++    "    'notes':         'LightGBM GBDT, best params from a fresh Optuna refinement study run '\n",
++    "                     'directly on fe_v3_native (50 trials, 3-fold inner CV, ROC-AUC objective), '\n",
++    "                     'trial 0 seeded from run 20260609-222839-80b124 (lgbm-refined-best). Tests '\n",
++    "                     'whether the high-cardinality crosses + charge ratios carry marginal signal '\n",
++    "                     'once params are tuned on the enlarged feature space rather than pinned '\n",
++    "                     'from fe_v1 / fe_v2.',\n",
++    "    'parent_run_id': '20260609-222839-80b124',\n",
++    "    'save_models':   False,\n",
++    "    'data_version':  DATA_VERSION,\n",
++    "}"
++   ]
+   },
+   {
+    "cell_type": "code",
+@@ -324,7 +463,13 @@
+    "id": "76e20de2",
+    "metadata": {},
+    "outputs": [],
+-   "source": "# Step 1 — Run the experiment.\n# Fits models fold by fold, prints scores as they complete, then prints the\n# final OOF metric. Nothing is written to disk yet.\n# Full implementation: src/cv.py\nresult = run_cv_experiment(run_config, X_train, y_train, X_test, encoded_features)"
++   "source": [
++    "# Step 1 — Run the experiment.\n",
++    "# Fits models fold by fold, prints scores as they complete, then prints the\n",
++    "# final OOF metric. Nothing is written to disk yet.\n",
++    "# Full implementation: src/cv.py\n",
++    "result = run_cv_experiment(run_config, X_train, y_train, X_test, encoded_features)"
++   ]
+   },
+   {
+    "cell_type": "code",
+@@ -332,7 +477,13 @@
+    "id": "1d432d90",
+    "metadata": {},
+    "outputs": [],
+-   "source": "# Step 2 — Save the run (optional).\n# Review the fold scores and OOF metric printed above, then run this cell\n# to permanently log the run to experiments/runs.csv and write its artifact\n# directory. Skip this cell to discard the run without any trace on disk.\nrun_id = save_experiment(result)"
++   "source": [
++    "# Step 2 — Save the run (optional).\n",
++    "# Review the fold scores and OOF metric printed above, then run this cell\n",
++    "# to permanently log the run to experiments/runs.csv and write its artifact\n",
++    "# directory. Skip this cell to discard the run without any trace on disk.\n",
++    "run_id = save_experiment(result)"
++   ]
+   },
+   {
+    "cell_type": "markdown",
+@@ -348,7 +499,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 100,
++   "execution_count": null,
+    "id": "1e648f08",
+    "metadata": {},
+    "outputs": [
+@@ -726,7 +877,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 101,
++   "execution_count": null,
+    "id": "d8199b10",
+    "metadata": {},
+    "outputs": [],
+@@ -777,7 +928,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 102,
++   "execution_count": null,
+    "id": "1a08983d",
+    "metadata": {},
+    "outputs": [],
+@@ -809,4 +960,4 @@
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+-}
+\ No newline at end of file
++}
