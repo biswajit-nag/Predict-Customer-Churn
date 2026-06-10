@@ -1,0 +1,1 @@
+Logistic regression pipeline: StandardScaler numerics + one-hot native cats + in-fold TargetEncoder on the Contract×Payment, Contract×Internet, service-profile, and tenure-bin×Contract crosses (docs/fe_ideas.md §1), fe_v3_native.
