@@ -1,0 +1,103 @@
+{
+  "memory": null,
+  "steps": [
+    [
+      "pre",
+      "ColumnTransformer(transformers=[('cross_te',\n                                 TargetEncoder(cv=StratifiedKFold(n_splits=5, random_state=42, shuffle=True),\n                                               target_type='binary'),\n                                 ['contract_x_payment', 'contract_x_internet',\n                                  'service_profile', 'tenure_bin_x_contract']),\n                                ('cat_ohe',\n                                 OneHotEncoder(handle_unknown='ignore'),\n                                 ['gender', 'Partner', 'Dependents',\n                                  'PhoneService', 'MultipleLines',\n                                  'InternetService', 'OnlineSecurity',\n                                  'OnlineBackup', 'DeviceProtection',\n                                  'TechSupport', 'StreamingTV',\n                                  'StreamingMovies', 'Contract',\n                                  'PaperlessBilling', 'PaymentMethod']),\n                                ('num_sc', StandardScaler(),\n                                 ['SeniorCitizen', 'tenure', 'MonthlyCharges',\n                                  'TotalCharges', 'TotalDiscount', 'PriceRatio',\n                                  'AverageMonthly'])])"
+    ],
+    [
+      "clf",
+      "LogisticRegression(max_iter=1000, random_state=42)"
+    ]
+  ],
+  "transform_input": null,
+  "verbose": false,
+  "pre": "ColumnTransformer(transformers=[('cross_te',\n                                 TargetEncoder(cv=StratifiedKFold(n_splits=5, random_state=42, shuffle=True),\n                                               target_type='binary'),\n                                 ['contract_x_payment', 'contract_x_internet',\n                                  'service_profile', 'tenure_bin_x_contract']),\n                                ('cat_ohe',\n                                 OneHotEncoder(handle_unknown='ignore'),\n                                 ['gender', 'Partner', 'Dependents',\n                                  'PhoneService', 'MultipleLines',\n                                  'InternetService', 'OnlineSecurity',\n                                  'OnlineBackup', 'DeviceProtection',\n                                  'TechSupport', 'StreamingTV',\n                                  'StreamingMovies', 'Contract',\n                                  'PaperlessBilling', 'PaymentMethod']),\n                                ('num_sc', StandardScaler(),\n                                 ['SeniorCitizen', 'tenure', 'MonthlyCharges',\n                                  'TotalCharges', 'TotalDiscount', 'PriceRatio',\n                                  'AverageMonthly'])])",
+  "clf": "LogisticRegression(max_iter=1000, random_state=42)",
+  "pre__n_jobs": null,
+  "pre__remainder": "drop",
+  "pre__sparse_threshold": 0.3,
+  "pre__transformer_weights": null,
+  "pre__transformers": [
+    [
+      "cross_te",
+      "TargetEncoder(cv=StratifiedKFold(n_splits=5, random_state=42, shuffle=True),\n              target_type='binary')",
+      [
+        "contract_x_payment",
+        "contract_x_internet",
+        "service_profile",
+        "tenure_bin_x_contract"
+      ]
+    ],
+    [
+      "cat_ohe",
+      "OneHotEncoder(handle_unknown='ignore')",
+      [
+        "gender",
+        "Partner",
+        "Dependents",
+        "PhoneService",
+        "MultipleLines",
+        "InternetService",
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
+        "Contract",
+        "PaperlessBilling",
+        "PaymentMethod"
+      ]
+    ],
+    [
+      "num_sc",
+      "StandardScaler()",
+      [
+        "SeniorCitizen",
+        "tenure",
+        "MonthlyCharges",
+        "TotalCharges",
+        "TotalDiscount",
+        "PriceRatio",
+        "AverageMonthly"
+      ]
+    ]
+  ],
+  "pre__verbose": false,
+  "pre__verbose_feature_names_out": true,
+  "pre__cross_te": "TargetEncoder(cv=StratifiedKFold(n_splits=5, random_state=42, shuffle=True),\n              target_type='binary')",
+  "pre__cat_ohe": "OneHotEncoder(handle_unknown='ignore')",
+  "pre__num_sc": "StandardScaler()",
+  "pre__cross_te__categories": "auto",
+  "pre__cross_te__cv": "StratifiedKFold(n_splits=5, random_state=42, shuffle=True)",
+  "pre__cross_te__random_state": "deprecated",
+  "pre__cross_te__shuffle": "deprecated",
+  "pre__cross_te__smooth": "auto",
+  "pre__cross_te__target_type": "binary",
+  "pre__cat_ohe__categories": "auto",
+  "pre__cat_ohe__drop": null,
+  "pre__cat_ohe__dtype": "<class 'numpy.float64'>",
+  "pre__cat_ohe__feature_name_combiner": "concat",
+  "pre__cat_ohe__handle_unknown": "ignore",
+  "pre__cat_ohe__max_categories": null,
+  "pre__cat_ohe__min_frequency": null,
+  "pre__cat_ohe__sparse_output": true,
+  "pre__num_sc__copy": true,
+  "pre__num_sc__with_mean": true,
+  "pre__num_sc__with_std": true,
+  "clf__C": 1.0,
+  "clf__class_weight": null,
+  "clf__dual": false,
+  "clf__fit_intercept": true,
+  "clf__intercept_scaling": 1,
+  "clf__l1_ratio": 0.0,
+  "clf__max_iter": 1000,
+  "clf__n_jobs": null,
+  "clf__penalty": "deprecated",
+  "clf__random_state": 42,
+  "clf__solver": "lbfgs",
+  "clf__tol": 0.0001,
+  "clf__verbose": 0,
+  "clf__warm_start": false
+}
