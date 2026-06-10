@@ -1,0 +1,28 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index 0190c8b..1e9c675 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -421,23 +421,6 @@
+     "}"
+    ]
+   },
+-  {
+-   "cell_type": "code",
+-   "execution_count": 48,
+-   "id": "64ea9658",
+-   "metadata": {},
+-   "outputs": [],
+-   "source": [
+-    "import importlib\n",
+-    "import src.tracking, src.cv\n",
+-    "\n",
+-    "importlib.reload(src.tracking)          # picks up the encoding=\"utf-8\" fix\n",
+-    "importlib.reload(src.cv)                # re-binds its git_info to the reloaded one\n",
+-    "\n",
+-    "# Re-import the names the notebook calls directly so they point at the new code\n",
+-    "from src.cv import run_cv_experiment, save_experiment"
+-   ]
+-  },
+   {
+    "cell_type": "code",
+    "execution_count": 49,
