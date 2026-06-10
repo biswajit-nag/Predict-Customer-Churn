@@ -1,0 +1,1 @@
+LightGBM GBDT, best params from a fresh Optuna refinement study run directly on fe_v3_native (50 trials, 3-fold inner CV, ROC-AUC objective), trial 0 seeded from run 20260609-222839-80b124 (lgbm-refined-best). Tests whether the high-cardinality crosses + charge ratios carry marginal signal once params are tuned on the enlarged feature space rather than pinned from fe_v1 / fe_v2.
