@@ -1,0 +1,212 @@
+diff --git a/Experiments.ipynb b/Experiments.ipynb
+index bd9a3ae..542533b 100644
+--- a/Experiments.ipynb
++++ b/Experiments.ipynb
+@@ -31,7 +31,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 67,
++   "execution_count": 79,
+    "id": "d12a1abe",
+    "metadata": {},
+    "outputs": [],
+@@ -111,7 +111,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 68,
++   "execution_count": 80,
+    "id": "5d414eb8",
+    "metadata": {},
+    "outputs": [
+@@ -162,15 +162,100 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": null,
++   "execution_count": 81,
+    "id": "b9dd0436",
+    "metadata": {},
+-   "outputs": [],
+-   "source": "import pyarrow as pa\nimport pyarrow.parquet as pq\n\n# The '_native' suffix marks the base encoding (category-dtype categoricals, not\n# one-hot) so this FE cache never collides with the one-hot parquets, and so a\n# run's logged data_version unambiguously identifies which base it used. Bumped\n# to fe_v3 when the docs/fe_ideas.md §1 high-cardinality crosses were added.\nDATA_VERSION = 'fe_v3_native'  # bump whenever engineer_features changes — see rule below\n\n# The service-profile string concatenates the 8 service flags + InternetService\n# into one categorical (docs/fe_ideas.md §1).\nSERVICE_COLS = ['PhoneService', 'MultipleLines', 'OnlineSecurity', 'OnlineBackup',\n                'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies',\n                'InternetService']\n\n\ndef engineer_features(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Row-wise (stateless) feature engineering.\n\n    Each new column depends ONLY on values from the row being transformed — no\n    aggregates, no fitted encoders, no cross-row statistics. Those leak val/test\n    information into training when applied before the CV split, so they belong\n    inside the fold loop instead.\n\n    The high-cardinality crosses below are deliberately left as raw category\n    strings here, because mapping a category to a number is the leakage-prone\n    half and must be fitted per-fold inside the CV loop, never once up front.\n    How that mapping happens depends on the model in the run-config cell:\n    LightGBM splits on the categories natively (its per-fold tree build *is* the\n    in-fold fit, so no separate encoder is needed), whereas an LR pipeline would\n    target-encode them per fold instead. Either way the encoding is refit on each\n    fold's training rows — leakage-safe by construction (docs/fe_ideas.md §1).\n    \"\"\"\n    df = df.copy()\n\n    # --- Numeric row-wise features (kept from fe_v2) ---\n    df['TotalDiscount']  = df['TotalCharges'] - df['MonthlyCharges'] * df['tenure']\n    df['PriceRatio']     = df['MonthlyCharges'] * df['tenure'] / df['TotalCharges']\n    df['AverageMonthly'] = df['TotalCharges'] / df['tenure']\n\n    # --- High-cardinality categorical crosses (docs/fe_ideas.md §1) ---\n    # Concatenate raw category strings; each cross is a single column (cheap under\n    # native encoding, where one-hot would make these combinatorially explosive).\n    # Downstream these are encoded per-fold inside the CV loop — LightGBM splits on\n    # them natively, an LR pipeline would target-encode them — so no leakage either way.\n    df['contract_x_payment'] = (df['Contract'].astype(str) + ' | '\n                                + df['PaymentMethod'].astype(str)).astype('category')\n    df['contract_x_internet'] = (df['Contract'].astype(str) + ' | '\n                                 + df['InternetService'].astype(str)).astype('category')\n    # Full service-profile string: ~330 realistic levels, each well-estimated at 594k rows.\n    df['service_profile'] = (df[SERVICE_COLS].astype(str)\n                             .agg(' | '.join, axis=1).astype('category'))\n    # tenure binned into 6-month buckets, crossed with Contract. Dual-encoded:\n    # the numeric `tenure` column is retained alongside this categorical view.\n    tenure_bin = (df['tenure'] // 6).astype(int)\n    df['tenure_bin_x_contract'] = (tenure_bin.astype(str) + ' | '\n                                   + df['Contract'].astype(str)).astype('category')\n\n    return df\n\n\n# Cache engineered parquets per DATA_VERSION. Past runs are reconstructible by\n# loading the parquet whose suffix matches that run's logged data_version.\nfe_train_path = DATA_DIR / f'train_df_{DATA_VERSION}.parquet'\nfe_test_path  = DATA_DIR / f'test_df_{DATA_VERSION}.parquet'\n\nif fe_train_path.exists() and fe_test_path.exists():\n    train_df = pd.read_parquet(fe_train_path)\n    test_df  = pd.read_parquet(fe_test_path)\n    print(f'Loaded cached FE: {DATA_VERSION}')\nelse:\n    train_df = engineer_features(train_df)\n    test_df  = engineer_features(test_df)\n    pq.write_table(pa.Table.from_pandas(train_df, preserve_index=False), fe_train_path)\n    pq.write_table(pa.Table.from_pandas(test_df,  preserve_index=False), fe_test_path)\n    print(f'Computed and cached FE: {DATA_VERSION}')"
++   "outputs": [
++    {
++     "name": "stdout",
++     "output_type": "stream",
++     "text": [
++      "Loaded cached FE: fe_v3_native\n"
++     ]
++    }
++   ],
++   "source": [
++    "import pyarrow as pa\n",
++    "import pyarrow.parquet as pq\n",
++    "\n",
++    "# The '_native' suffix marks the base encoding (category-dtype categoricals, not\n",
++    "# one-hot) so this FE cache never collides with the one-hot parquets, and so a\n",
++    "# run's logged data_version unambiguously identifies which base it used. Bumped\n",
++    "# to fe_v3 when the docs/fe_ideas.md §1 high-cardinality crosses were added.\n",
++    "DATA_VERSION = 'fe_v3_native'  # bump whenever engineer_features changes — see rule below\n",
++    "\n",
++    "# The service-profile string concatenates the 8 service flags + InternetService\n",
++    "# into one categorical (docs/fe_ideas.md §1).\n",
++    "SERVICE_COLS = ['PhoneService', 'MultipleLines', 'OnlineSecurity', 'OnlineBackup',\n",
++    "                'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies',\n",
++    "                'InternetService']\n",
++    "\n",
++    "\n",
++    "def engineer_features(df: pd.DataFrame) -> pd.DataFrame:\n",
++    "    \"\"\"Row-wise (stateless) feature engineering.\n",
++    "\n",
++    "    Each new column depends ONLY on values from the row being transformed — no\n",
++    "    aggregates, no fitted encoders, no cross-row statistics. Those leak val/test\n",
++    "    information into training when applied before the CV split, so they belong\n",
++    "    inside the fold loop instead.\n",
++    "\n",
++    "    The high-cardinality crosses below are deliberately left as raw category\n",
++    "    strings here, because mapping a category to a number is the leakage-prone\n",
++    "    half and must be fitted per-fold inside the CV loop, never once up front.\n",
++    "    How that mapping happens depends on the model in the run-config cell:\n",
++    "    LightGBM splits on the categories natively (its per-fold tree build *is* the\n",
++    "    in-fold fit, so no separate encoder is needed), whereas an LR pipeline would\n",
++    "    target-encode them per fold instead. Either way the encoding is refit on each\n",
++    "    fold's training rows — leakage-safe by construction (docs/fe_ideas.md §1).\n",
++    "    \"\"\"\n",
++    "    df = df.copy()\n",
++    "\n",
++    "    # --- Numeric row-wise features (kept from fe_v2) ---\n",
++    "    df['TotalDiscount']  = df['TotalCharges'] - df['MonthlyCharges'] * df['tenure']\n",
++    "    df['PriceRatio']     = df['MonthlyCharges'] * df['tenure'] / df['TotalCharges']\n",
++    "    df['AverageMonthly'] = df['TotalCharges'] / df['tenure']\n",
++    "\n",
++    "    # --- High-cardinality categorical crosses (docs/fe_ideas.md §1) ---\n",
++    "    # Concatenate raw category strings; each cross is a single column (cheap under\n",
++    "    # native encoding, where one-hot would make these combinatorially explosive).\n",
++    "    # Downstream these are encoded per-fold inside the CV loop — LightGBM splits on\n",
++    "    # them natively, an LR pipeline would target-encode them — so no leakage either way.\n",
++    "    df['contract_x_payment'] = (df['Contract'].astype(str) + ' | '\n",
++    "                                + df['PaymentMethod'].astype(str)).astype('category')\n",
++    "    df['contract_x_internet'] = (df['Contract'].astype(str) + ' | '\n",
++    "                                 + df['InternetService'].astype(str)).astype('category')\n",
++    "    # Full service-profile string: ~330 realistic levels, each well-estimated at 594k rows.\n",
++    "    df['service_profile'] = (df[SERVICE_COLS].astype(str)\n",
++    "                             .agg(' | '.join, axis=1).astype('category'))\n",
++    "    # tenure binned into 6-month buckets, crossed with Contract. Dual-encoded:\n",
++    "    # the numeric `tenure` column is retained alongside this categorical view.\n",
++    "    tenure_bin = (df['tenure'] // 6).astype(int)\n",
++    "    df['tenure_bin_x_contract'] = (tenure_bin.astype(str) + ' | '\n",
++    "                                   + df['Contract'].astype(str)).astype('category')\n",
++    "\n",
++    "    return df\n",
++    "\n",
++    "\n",
++    "# Cache engineered parquets per DATA_VERSION. Past runs are reconstructible by\n",
++    "# loading the parquet whose suffix matches that run's logged data_version.\n",
++    "fe_train_path = DATA_DIR / f'train_df_{DATA_VERSION}.parquet'\n",
++    "fe_test_path  = DATA_DIR / f'test_df_{DATA_VERSION}.parquet'\n",
++    "\n",
++    "if fe_train_path.exists() and fe_test_path.exists():\n",
++    "    train_df = pd.read_parquet(fe_train_path)\n",
++    "    test_df  = pd.read_parquet(fe_test_path)\n",
++    "    print(f'Loaded cached FE: {DATA_VERSION}')\n",
++    "else:\n",
++    "    train_df = engineer_features(train_df)\n",
++    "    test_df  = engineer_features(test_df)\n",
++    "    pq.write_table(pa.Table.from_pandas(train_df, preserve_index=False), fe_train_path)\n",
++    "    pq.write_table(pa.Table.from_pandas(test_df,  preserve_index=False), fe_test_path)\n",
++    "    print(f'Computed and cached FE: {DATA_VERSION}')"
++   ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 70,
++   "execution_count": 82,
+    "id": "fd98eb46",
+    "metadata": {},
+    "outputs": [
+@@ -217,7 +302,22 @@
+    "execution_count": null,
+    "id": "b19a29ca",
+    "metadata": {},
+-   "outputs": [],
++   "outputs": [
++    {
++     "data": {
++      "application/vnd.jupyter.widget-view+json": {
++       "model_id": "75d58b8dc5414fb3afd9d643a93a668d",
++       "version_major": 2,
++       "version_minor": 0
++      },
++      "text/plain": [
++       "  0%|          | 0/50 [00:00<?, ?it/s]"
++      ]
++     },
++     "metadata": {},
++     "output_type": "display_data"
++    }
++   ],
+    "source": [
+     "# --- Optuna LGBM refinement (commented out — run after the pinned-params run) ---\n",
+     "# Uncomment (select all + Ctrl+/), run, then set run_config['params'] =\n",
+@@ -295,7 +395,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 72,
++   "execution_count": null,
+    "id": "996759da",
+    "metadata": {},
+    "outputs": [],
+@@ -333,7 +433,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 74,
++   "execution_count": null,
+    "id": "76e20de2",
+    "metadata": {},
+    "outputs": [
+@@ -368,7 +468,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 75,
++   "execution_count": null,
+    "id": "1d432d90",
+    "metadata": {},
+    "outputs": [
+@@ -402,7 +502,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 76,
++   "execution_count": null,
+    "id": "1e648f08",
+    "metadata": {},
+    "outputs": [
+@@ -752,7 +852,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 77,
++   "execution_count": null,
+    "id": "d8199b10",
+    "metadata": {},
+    "outputs": [],
+@@ -803,7 +903,7 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 78,
++   "execution_count": null,
+    "id": "1a08983d",
+    "metadata": {},
+    "outputs": [],
+@@ -835,4 +935,4 @@
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+-}
+\ No newline at end of file
++}

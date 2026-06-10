@@ -1,0 +1,64 @@
+{
+  "fold_scores": [
+    0.8607611979232407,
+    0.861442792349313,
+    0.8614932808253183,
+    0.8620318245693753,
+    0.8606506336357057
+  ],
+  "fold_times_sec": [
+    9.902053600002546,
+    9.865984599979129,
+    9.734469100018032,
+    9.786747300007846,
+    9.723603199992795
+  ],
+  "oof_score": 0.861275946912961,
+  "fold_scores_mean": 0.8612759458605905,
+  "fold_scores_std": 0.000510373525505139,
+  "oof_roc_auc": 0.9158583256804154,
+  "fold_roc_aucs": [
+    0.9154920762209311,
+    0.9166217568974735,
+    0.9159467633607059,
+    0.9168681933127089,
+    0.9144141358308627
+  ],
+  "fold_roc_auc_mean": 0.9158685851245364,
+  "fold_roc_auc_std": 0.0008751888697170585,
+  "training_time_sec": 49.01285780000035,
+  "cv_config": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "random_state": 42,
+    "shuffle": true
+  },
+  "features": [
+    "gender",
+    "SeniorCitizen",
+    "Partner",
+    "Dependents",
+    "tenure",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod",
+    "MonthlyCharges",
+    "TotalCharges",
+    "TotalDiscount",
+    "PriceRatio",
+    "AverageMonthly",
+    "contract_x_payment",
+    "contract_x_internet",
+    "service_profile",
+    "tenure_bin_x_contract"
+  ]
+}

@@ -1,0 +1,1 @@
+LGBM GBDT, best params pinned from run 20260609-222839-80b124 (lgbm-refined trial 25), on fe_v3_native (high-cardinality crosses + charge ratios, native categorical encoding).
