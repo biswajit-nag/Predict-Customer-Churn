@@ -1,0 +1,1 @@
+XGBoost GBDT with minimal FE: contract_x_internet + contract_x_payment + AverageMonthly only. Best params from a 60-trial Optuna study (3-fold inner CV, ROC-AUC) with grow_policy=lossguide and max_leaves coupled to max_depth; trial 0 seeded from run 20260610-051307-62d4fa (xgb-refined-best-fe_v3).
