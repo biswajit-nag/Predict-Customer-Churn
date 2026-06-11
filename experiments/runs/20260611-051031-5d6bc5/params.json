@@ -1,0 +1,32 @@
+{
+  "iterations": 1247,
+  "learning_rate": 0.09680496773520687,
+  "depth": 6,
+  "l2_leaf_reg": 1.293774973501806,
+  "border_count": 245,
+  "random_seed": 42,
+  "verbose": 0,
+  "random_strength": 0.10812232374192264,
+  "bagging_temperature": 0.09787890533355237,
+  "task_type": "GPU",
+  "devices": "0:1",
+  "cat_features": [
+    "gender",
+    "Partner",
+    "Dependents",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod",
+    "contract_x_payment",
+    "contract_x_internet"
+  ]
+}
