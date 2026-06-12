@@ -1,0 +1,11 @@
+{
+  "batch_size": 256,
+  "devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "lr": 0.004853087769767874,
+  "n_epochs": 100,
+  "random_state": 42,
+  "weight_decay": 0.0006359846756374852
+}
