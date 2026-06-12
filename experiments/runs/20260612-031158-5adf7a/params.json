@@ -1,0 +1,10 @@
+{
+  "chunk": 20000,
+  "devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "n_bags": 3,
+  "random_state": 42,
+  "subsample_n": 50000
+}
