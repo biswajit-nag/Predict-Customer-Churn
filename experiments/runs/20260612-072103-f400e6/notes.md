@@ -1,0 +1,1 @@
+RandomForestClassifier on one-hot fe_v0 (no FE). Best params from a 30-trial Optuna study (3-fold inner CV, ROC-AUC, TPE).
