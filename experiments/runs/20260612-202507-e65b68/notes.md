@@ -1,0 +1,1 @@
+ExplainableBoostingClassifier (interpret) on fe_v4_native (AverageMonthly + contract_x_payment + contract_x_internet + 19 base native categoricals). Categoricals consumed natively as nominal features (feature_types declared explicitly; no one-hot/ordinal). Best params from a 40-trial Optuna study (3-fold inner CV, ROC-AUC, TPE); trial 0 seeded from reasonable EBM defaults.
