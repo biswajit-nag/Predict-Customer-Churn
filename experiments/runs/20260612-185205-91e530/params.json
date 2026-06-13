@@ -1,0 +1,9 @@
+{
+  "devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "n_cv": 1,
+  "n_refit": 0,
+  "random_state": 42
+}
