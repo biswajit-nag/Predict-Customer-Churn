@@ -1,0 +1,1 @@
+catboost on fe_v5_stack (fe_v4_native + 6 diverse OOF columns) with true pseudo-labels (23805 confident test rows, top/bottom 5% of a rank-mean blend, into training folds only). Regularization-biased Optuna (20 trials, 3-fold inner CV on a 100k subsample, ROC-AUC). Run via scripts/run_stacked_experiments.py.
