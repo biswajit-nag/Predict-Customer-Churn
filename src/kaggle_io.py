@@ -57,19 +57,29 @@ def credentials_available(force: bool = False) -> bool:
     global _CREDS_PROBE_CACHE
     if shutil.which("kaggle") is None:
         return False
-    # Fast path: explicit credentials we can see ourselves.
+    # Fast path: explicit credentials we can see ourselves. Three supported forms:
+    #  - KAGGLE_USERNAME + KAGGLE_KEY environment variables (API token via env);
+    #  - ~/.kaggle/credentials.json  (the CLI's API-token store from `kaggle auth login`);
+    #  - ~/.kaggle/kaggle.json       (legacy manual username+key file).
+    kdir = Path(os.environ.get("KAGGLE_CONFIG_DIR", Path.home() / ".kaggle"))
     if os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY"):
         return True
-    if (Path.home() / ".kaggle" / "kaggle.json").exists():
+    if (kdir / "credentials.json").exists() or (kdir / "kaggle.json").exists():
         return True
     # Ground-truth probe: ask the CLI to hit an authenticated endpoint.
     if _CREDS_PROBE_CACHE is not None and not force:
         return _CREDS_PROBE_CACHE
     r = _kaggle(["competitions", "submissions", "-c", COMPETITION])
     out = ((r.stdout or "") + (r.stderr or "")).lower()
-    authed = r.returncode == 0 and not any(
-        s in out for s in ("401", "unauthorized", "could not find", "credentials", "forbidden")
-    )
+    # Only treat the run as 'no credentials' on a *definitive auth error*. A
+    # transient failure (network, rate limit / 429, slow API) must NOT be reported
+    # as missing creds — return True there and let the actual submit surface the
+    # real error, rather than silently blocking a run whose creds are fine.
+    auth_error = any(s in out for s in (
+        "401", "unauthorized", "403", "forbidden",
+        "could not find kaggle.json", "no api key", "credentials were not found",
+    ))
+    authed = not auth_error
     _CREDS_PROBE_CACHE = authed
     return authed
 
