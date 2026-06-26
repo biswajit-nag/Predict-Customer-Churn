@@ -54,6 +54,32 @@ RUNS_DIR        = EXPERIMENTS_DIR / "runs"
 DATA_DIR        = PROJECT_ROOT / "data" / "processed"
 UV_LOCK         = PROJECT_ROOT / "uv.lock"
 
+# data_version labels that predate the train_df_{data_version}.parquet convention
+# and therefore have no exactly-named parquet. They alias the canonical base file
+# with the same encoding/feature set (fe_v0_onehot == the 40-col one-hot fe_v0;
+# fe_v0_native == the 19-col native base).
+_DATA_VERSION_ALIASES = {
+    "fe_v0_onehot": "train_df_fe_v0.parquet",
+    "fe_v0_native": "train_df_native.parquet",
+}
+
+
+def train_parquet_for(data_version: str) -> Path:
+    """Resolve the processed train parquet a run with this data_version used.
+
+    Why: data_hash must fingerprint the parquet the run actually trained on.
+    The convention is data/processed/train_df_{data_version}.parquet; a couple
+    of legacy labels are aliased (see _DATA_VERSION_ALIASES), and the one-hot
+    default (train_df.parquet) is the last-resort fallback.
+    """
+    cand = DATA_DIR / f"train_df_{data_version}.parquet"
+    if cand.exists():
+        return cand
+    alias = _DATA_VERSION_ALIASES.get(data_version)
+    if alias and (DATA_DIR / alias).exists():
+        return DATA_DIR / alias
+    return DATA_DIR / "train_df.parquet"
+
 # ---------------------------------------------------------------------------
 # Utility functions
 # ---------------------------------------------------------------------------
@@ -186,16 +212,18 @@ def save_run(run_dict: dict, artifacts: dict, run_id: str) -> Path:
 
 
 def load_runs() -> pd.DataFrame:
-    """Read runs.csv sorted by oof_score descending.
+    """Read runs.csv sorted by the primary metric (oof_roc_auc) descending.
 
     Returns an empty DataFrame if no runs have been logged yet, so display
-    cells don't error before the first run.
+    cells don't error before the first run. Falls back to the legacy oof_score
+    column only if oof_roc_auc is absent (pre-migration CSVs).
     """
     if not RUNS_CSV.exists():
         return pd.DataFrame()
     df = pd.read_csv(RUNS_CSV)
-    if "oof_score" in df.columns:
-        df = df.sort_values("oof_score", ascending=False).reset_index(drop=True)
+    sort_col = "oof_roc_auc" if "oof_roc_auc" in df.columns else "oof_score"
+    if sort_col in df.columns:
+        df = df.sort_values(sort_col, ascending=False).reset_index(drop=True)
     return df
 
 

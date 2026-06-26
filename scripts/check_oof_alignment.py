@@ -105,11 +105,11 @@ def main() -> None:
         auc = roc_auc(y, oof)
         acc = sum((p >= 0.5) == yi for p, yi in zip(oof, y)) / len(y)
         auc_ok = abs(auc - float(row["oof_roc_auc"])) < 1e-9
-        acc_ok = abs(acc - float(row["oof_score"])) < 1e-9
+        acc_ok = abs(acc - float(row["oof_accuracy"])) < 1e-9
         verdict = "ALIGNED" if (auc_ok and acc_ok) else "MISMATCH"
         print(f"{run_id:23s} {row['tag']:26s} {origin:14s} "
               f"{auc:13.9f} {float(row['oof_roc_auc']):13.9f} "
-              f"{acc:13.9f} {float(row['oof_score']):13.9f}  {verdict}")
+              f"{acc:13.9f} {float(row['oof_accuracy']):13.9f}  {verdict}")
 
 
 if __name__ == "__main__":
