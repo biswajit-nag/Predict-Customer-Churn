@@ -1,0 +1,30 @@
+{
+  "iterations": 917,
+  "learning_rate": 0.017648075119253,
+  "depth": 4,
+  "l2_leaf_reg": 2.311873871498488,
+  "verbose": 0,
+  "random_strength": 0.2119884885530727,
+  "bagging_temperature": 0.18644868622742636,
+  "random_state": 42,
+  "cat_features": [
+    "gender",
+    "Partner",
+    "Dependents",
+    "PhoneService",
+    "MultipleLines",
+    "InternetService",
+    "OnlineSecurity",
+    "OnlineBackup",
+    "DeviceProtection",
+    "TechSupport",
+    "StreamingTV",
+    "StreamingMovies",
+    "Contract",
+    "PaperlessBilling",
+    "PaymentMethod",
+    "contract_x_payment",
+    "contract_x_internet"
+  ],
+  "min_data_in_leaf": 67
+}

@@ -114,3 +114,93 @@ def build_stacked_dataset(
           f"train {train_df.shape}, test {test_df.shape}, "
           f"+{len(oof_columns)} OOF columns.")
     return train_df, test_df
+
+
+def build_perfold_dataset(
+    base_version: str,
+    fold_run_ids: dict[str, str],
+    out_version: str,
+    target: str = "Churn",
+    force: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Build a data version = base features + **per-fold** OOF columns (5 per model).
+
+    Unlike build_stacked_dataset (one collapsed OOF column per model), this expands
+    each model into 5 columns `{prefix}_f0..f4` keyed on the canonical seed-42 folds:
+
+      - **train** rows: column `{prefix}_f{k}` holds the model's held-out OOF
+        prediction *only* for the rows in validation fold k, and NaN for the other
+        4/5 of rows. So every train row has exactly one non-NaN column per model
+        (its leakage-free OOF value); the in-sample folds are deliberately left NaN.
+      - **test** rows: column `{prefix}_f{k}` holds that model's fold-k test
+        prediction (`test_proba_folds[:, k]`); all 5 are filled.
+
+    Why: each column is then "fold-k model's *out-of-sample* output" on both the
+    train rows it's defined on and all test rows, so it has a consistent train/test
+    distribution — removing the single-fold-OOF (train) vs bagged-mean (test)
+    mismatch that a collapsed OOF column suffers. GBDTs ingest the 80%-NaN columns
+    natively (learned default direction per split).
+
+    Parameters
+    ----------
+    fold_run_ids : dict[str, str]
+        {column_prefix: run_id}. Each run must have a full-length oof_proba.npy and
+        a (n_test, 5) test_proba_folds.npy under the canonical seed-42 fold split.
+    """
+    train_path = DATA_DIR / f"train_df_{out_version}.parquet"
+    test_path  = DATA_DIR / f"test_df_{out_version}.parquet"
+    if not force and train_path.exists() and test_path.exists():
+        print(f"Loaded cached per-fold data ({out_version}).")
+        return pd.read_parquet(train_path), pd.read_parquet(test_path)
+
+    base_train_path = DATA_DIR / f"train_df_{base_version}.parquet"
+    base_test_path  = DATA_DIR / f"test_df_{base_version}.parquet"
+    for p in (base_train_path, base_test_path):
+        if not p.exists():
+            raise FileNotFoundError(f"Base parquet not found: {p}")
+
+    train_df = pd.read_parquet(base_train_path)
+    test_df  = pd.read_parquet(base_test_path)
+    y = train_df[target].to_numpy()
+    runs = pd.read_csv(RUNS_CSV).set_index("run_id")
+
+    # Fold assignment per train row (merge on id so we never assume row order).
+    fold_map = pd.read_csv(RUNS_DIR.parent / "cv_folds_seed42.csv.gz")
+    folds = train_df[["id"]].merge(fold_map, on="id", how="left")["fold"].to_numpy()
+    if np.isnan(folds).any():
+        raise ValueError("Some train ids are missing from cv_folds_seed42.csv.gz")
+    folds = folds.astype(int)
+    n_splits = fold_map["fold"].nunique()
+
+    for prefix, run_id in fold_run_ids.items():
+        if run_id not in runs.index:
+            raise KeyError(f"{run_id} (for {prefix!r}) not in runs.csv")
+        run_dir = RUNS_DIR / run_id
+        oof = np.load(run_dir / "oof_proba.npy")
+        tpf = np.load(run_dir / "test_proba_folds.npy")
+        if len(oof) != len(train_df) or tpf.shape != (len(test_df), n_splits):
+            raise ValueError(
+                f"{prefix} ({run_id}): expected oof {len(train_df)} and "
+                f"test_proba_folds {(len(test_df), n_splits)}, got {len(oof)} / {tpf.shape}.")
+        # Row-alignment guard: OOF must reproduce the logged ROC-AUC.
+        recomputed = roc_auc_score(y, oof)
+        logged = float(runs.loc[run_id, "oof_roc_auc"])
+        if abs(recomputed - logged) > 1e-9:
+            raise AssertionError(
+                f"{prefix} ({run_id}): OOF not row-aligned ({recomputed:.9f} != {logged:.9f}).")
+        for k in range(n_splits):
+            # train: held-out OOF for fold-k rows only, NaN elsewhere
+            train_df[f"{prefix}_f{k}"] = np.where(folds == k, oof, np.nan).astype("float64")
+            # test: fold-k model's test prediction (always present)
+            test_df[f"{prefix}_f{k}"] = tpf[:, k].astype("float64")
+        print(f"  + {prefix:8s} <- {runs.loc[run_id, 'tag']:30s} "
+              f"({n_splits} per-fold cols, OOF AUC {recomputed:.5f})")
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.Table.from_pandas(train_df, preserve_index=False), train_path)
+    pq.write_table(pa.Table.from_pandas(test_df,  preserve_index=False), test_path)
+    n_new = len(fold_run_ids) * n_splits
+    print(f"Built and cached per-fold data ({out_version}): "
+          f"train {train_df.shape}, test {test_df.shape}, +{n_new} per-fold columns "
+          f"(train cols ~{100/n_splits:.0f}% filled, test cols 100% filled).")
+    return train_df, test_df

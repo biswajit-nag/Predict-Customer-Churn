@@ -1,0 +1,1 @@
+AGGRESSIVE test: catboost on fe_v5_stack (fe_v4_native + 6 diverse OOF columns) with 100% of test rows pseudo-labelled (hard label = rank-mean blend > 0.5) into training folds only. Unconstrained Optuna search, 60 trials, 3-fold inner CV tuned on 120k subsample. Tests whether aggressive full tuning closes the gap to the fe_v4 base. scripts/run_stacked_aggressive.py.
