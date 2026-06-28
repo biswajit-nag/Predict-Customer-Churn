@@ -1,0 +1,117 @@
+{
+  "oof_roc_auc": 0.9169896631257947,
+  "fold_roc_aucs": [
+    0.9167243775949049,
+    0.9175973991921084,
+    0.9170977792312471,
+    0.9182053997343582,
+    0.9153696217567445
+  ],
+  "fold_roc_auc_mean": 0.9169989155018726,
+  "fold_roc_auc_std": 0.0009543091886779845,
+  "oof_accuracy": 0.8622167170991293,
+  "fold_scores": [
+    0.8619560918553674,
+    0.8620570688073781,
+    0.8618635296493575,
+    0.863546478849536,
+    0.8616604116528384
+  ],
+  "fold_acc_mean": 0.8622167161628955,
+  "fold_acc_std": 0.000677627704840124,
+  "members": [
+    {
+      "label": "lgbm-catreg-fe-min3",
+      "run_id": "20260610-183508-48286b",
+      "weight": 0.2373499105146012
+    },
+    {
+      "label": "xgb-coupled-fe-min3",
+      "run_id": "20260610-200857-74b63f",
+      "weight": 0.2292437795431998
+    },
+    {
+      "label": "ebm-optuna-fe_v4_native",
+      "run_id": "20260612-202507-e65b68",
+      "weight": 0.22793153409849448
+    },
+    {
+      "label": "catboost-optuna-rocauc",
+      "run_id": "20260603-022850-0b0f8e",
+      "weight": 0.19678870610571286
+    },
+    {
+      "label": "rf-optuna-fe_v4_native",
+      "run_id": "20260612-133154-c3656f",
+      "weight": 0.03131066357034861
+    },
+    {
+      "label": "tabpfn-subfold-bag3",
+      "run_id": "20260612-063413-30f430",
+      "weight": 0.020690148004981635
+    },
+    {
+      "label": "tabicl-subfold-bag3",
+      "run_id": "20260612-031158-5adf7a",
+      "weight": 0.01991613005367018
+    },
+    {
+      "label": "realmlp-fe-min3",
+      "run_id": "20260612-185205-91e530",
+      "weight": 0.016039869102388093
+    },
+    {
+      "label": "tabm-optuna-fe-min3",
+      "run_id": "20260612-181438-3a3dd2",
+      "weight": 0.012331283754295614
+    },
+    {
+      "label": "et-optuna-fe_v4_native",
+      "run_id": "20260613-013703-1dde6d",
+      "weight": 0.008360384761146034
+    },
+    {
+      "label": "lr-pipeline|fe_v1",
+      "run_id": "20260609-192501-62906a",
+      "weight": 3.759049116156047e-05
+    }
+  ],
+  "scheme": {
+    "scheme": "softmax_auc",
+    "feature_scale": "prob",
+    "pool": "curated",
+    "T": 0.001,
+    "members": [
+      "lgbm-catreg-fe-min3",
+      "xgb-coupled-fe-min3",
+      "ebm-optuna-fe_v4_native",
+      "catboost-optuna-rocauc",
+      "rf-optuna-fe_v4_native",
+      "tabpfn-subfold-bag3",
+      "tabicl-subfold-bag3",
+      "realmlp-fe-min3",
+      "tabm-optuna-fe-min3",
+      "et-optuna-fe_v4_native",
+      "lr-pipeline|fe_v1"
+    ],
+    "weights": [
+      0.2373499105146012,
+      0.2292437795431998,
+      0.22793153409849448,
+      0.19678870610571286,
+      0.03131066357034861,
+      0.020690148004981635,
+      0.01991613005367018,
+      0.016039869102388093,
+      0.012331283754295614,
+      0.008360384761146034,
+      3.759049116156047e-05
+    ]
+  },
+  "cv_config": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "random_state": 42,
+    "shuffle": true
+  }
+}

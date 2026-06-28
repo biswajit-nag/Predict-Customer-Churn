@@ -1,0 +1,32 @@
+diff --git a/blending.ipynb b/blending.ipynb
+index 0ecb68b..d7db8f4 100644
+--- a/blending.ipynb
++++ b/blending.ipynb
+@@ -5947,6 +5947,20 @@
+     "      f\"Pearson {np.corrcoef(test_stack, test_hill)[0,1]:.5f}\")\n",
+     "submission.to_csv(\"submission_blend.csv\", index=False)"
+    ]
++  },
++  {
++   "cell_type": "markdown",
++   "id": "87610dd5",
++   "source": "## 5. Logging the blends as experiment runs — and their per-fold AUC spread\n\nUp to here every strategy was scored on a single **pooled** OOF ROC-AUC. But the\nbase runs are all ranked on their **per-fold** AUC (mean ± std), and the fold std\nis ≈ **0.0009** — larger than the ~+0.0003 a blend buys over the best single\nmodel. `docs/technical_review.md` §2.2 makes the point directly: *\"report the\nblend's per-fold OOF AUC (mean ± std), not just the pooled number, and state\nplainly whether the gain exceeds CV noise.\"*\n\nSo we give each headline blend the same treatment as a base run: score it on every\ncanonical seed-42 fold, and **log it as a first-class `experiments/runs.csv`\nentry** — which records `fold_roc_auc_mean` / `fold_roc_auc_std` for free, makes\nthe blend submittable, and lets it sit on the same leaderboard as the base models.\n\nThe machinery lives in `src/blending.py` (so the notebook and the unattended\n`scripts/run_blend_logging.py` build *identical* blends):\n\n- `build_headline_blends(...)` constructs the six (rank-mean curated; moderate-C\n  curated logit stack; the carried-forward best logit stack on the full pool;\n  hill-climb curated; best-softmax mean; the 50-trial Optuna LightGBM stack).\n- `save_blend_run(...)` writes a blend as a run. A blend has no training parquet,\n  so a few columns take blend conventions: `data_version=\"blend_v1\"` (a sentinel,\n  not an FE recipe), `data_hash` = the canonical train parquet (the shared OOF row\n  ordering), `parent_run_id=\"\"` (N parents — the member list + weights live in\n  `params.json`), `model_class` = a synthetic scheme name, `n_features` = the\n  number of member columns. For the rank-mean blend (a rank scale, not a\n  probability) `oof_accuracy` is logged as NaN.\n\nThe cell below **displays** the per-fold table (read it against the ~0.0009 noise\nfloor). Actual logging + Kaggle submission is done **once** by\n`scripts/run_blend_logging.py --submit`, so re-running this notebook never\ndouble-writes rows.",
++   "metadata": {}
++  },
++  {
++   "cell_type": "code",
++   "id": "90fd8af1",
++   "source": "from src import blending as bl\n\n# Build the six headline blends from the SAME logged OOF the cells above used. The\n# Optuna LGBM-stack params are reused from `study` above so this cell does not re-tune.\ntest_df = pd.DataFrame({lab: test_col(lab) for lab in oof.columns})\nblends = bl.build_headline_blends(oof, test_df, meta, CURATED, FULL, y, folds,\n                                  lgbm_stack_params=study.best_params)\n\n# Per-fold significance table (technical_review.md §2.2): read each blend's gain over\n# the best single member against that member's own per-fold std (~0.0009 — the noise\n# floor). |gain_in_fold_stds| < 1 means the gain sits inside CV noise.\nbase_fold_std = bl.fold_aucs(oof[curated_meta.iloc[0][\"label\"]].to_numpy(), y, folds)[2]\ntable = bl.summarize_blends(blends, y, folds, best_single, base_fold_std)\n\nprint(f\"best single member: {curated_meta.iloc[0]['label']}  OOF {best_single:.6f}  \"\n      f\"(per-fold std {base_fold_std:.6f} = noise floor)\\n\")\nprint(table.to_string(index=False, formatters={\n    \"oof_roc_auc\": \"{:.6f}\".format, \"fold_mean\": \"{:.6f}\".format,\n    \"fold_std\": \"{:.6f}\".format, \"vs_best_single\": \"{:+.6f}\".format,\n    \"gain_in_fold_stds\": \"{:+.2f}\".format}))\nprint(\"\\nLogged + submitted as runs.csv entries via:  \"\n      \"python scripts/run_blend_logging.py --submit\")",
++   "metadata": {},
++   "execution_count": null,
++   "outputs": []
+   }
+  ],
+  "metadata": {
+@@ -5970,4 +5984,4 @@
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+-}
++}
+\ No newline at end of file
