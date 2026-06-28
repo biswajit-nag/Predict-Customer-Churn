@@ -1,0 +1,1 @@
+L2 logistic stack (C=0.1) on standardized logit-OOF of all 47 aligned runs — the (pool, C) cell carried to submission in blending.ipynb. Strong L2 tames the multicollinear full pool.

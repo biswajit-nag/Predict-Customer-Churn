@@ -1,0 +1,1 @@
+Rank-mean blend of the curated pool (one best-AUC run per engine; linear slot by diversity). Calibration-free average for AUC. Post-hoc blend of logged OOF; per-fold AUC over the canonical seed-42 folds.

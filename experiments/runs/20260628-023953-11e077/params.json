@@ -1,0 +1,32 @@
+{
+  "scheme": "softmax_auc",
+  "feature_scale": "prob",
+  "pool": "curated",
+  "T": 0.001,
+  "members": [
+    "lgbm-catreg-fe-min3",
+    "xgb-coupled-fe-min3",
+    "ebm-optuna-fe_v4_native",
+    "catboost-optuna-rocauc",
+    "rf-optuna-fe_v4_native",
+    "tabpfn-subfold-bag3",
+    "tabicl-subfold-bag3",
+    "realmlp-fe-min3",
+    "tabm-optuna-fe-min3",
+    "et-optuna-fe_v4_native",
+    "lr-pipeline|fe_v1"
+  ],
+  "weights": [
+    0.2373499105146012,
+    0.2292437795431998,
+    0.22793153409849448,
+    0.19678870610571286,
+    0.03131066357034861,
+    0.020690148004981635,
+    0.01991613005367018,
+    0.016039869102388093,
+    0.012331283754295614,
+    0.008360384761146034,
+    3.759049116156047e-05
+  ]
+}

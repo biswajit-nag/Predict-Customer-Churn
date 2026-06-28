@@ -1,0 +1,369 @@
+{
+  "oof_roc_auc": 0.9172158070754951,
+  "fold_roc_aucs": [
+    0.9169062486062075,
+    0.9178300990629776,
+    0.9173700047230541,
+    0.9184579072159088,
+    0.9155869970911186
+  ],
+  "fold_roc_auc_mean": 0.9172302513398533,
+  "fold_roc_auc_std": 0.0009686846283968602,
+  "oof_accuracy": 0.8625196484649794,
+  "fold_scores": [
+    0.8618046264273513,
+    0.8622001194893932,
+    0.8625787830594334,
+    0.8639083129275743,
+    0.8621063969437386
+  ],
+  "fold_acc_mean": 0.8625196477694981,
+  "fold_acc_std": 0.0007370234718478908,
+  "members": [
+    {
+      "label": "lgbm-catreg-fe-min3",
+      "run_id": "20260610-183508-48286b",
+      "weight": 0.1765797058811153
+    },
+    {
+      "label": "xgb-coupled-fe-min3",
+      "run_id": "20260610-200857-74b63f",
+      "weight": 0.18813067210897427
+    },
+    {
+      "label": "ebm-optuna-fe_v4_native",
+      "run_id": "20260612-202507-e65b68",
+      "weight": 1.0263339685860806
+    },
+    {
+      "label": "xgb-coupled-fe-nocross5",
+      "run_id": "20260610-212446-de62f2",
+      "weight": 0.1700889586984079
+    },
+    {
+      "label": "lgbm-refined-best",
+      "run_id": "20260609-222839-80b124",
+      "weight": 0.03556998923839398
+    },
+    {
+      "label": "xgb-optuna-acc",
+      "run_id": "20260530-234246-15ca1c",
+      "weight": 0.25617938763213577
+    },
+    {
+      "label": "lgbm-refined-best-native",
+      "run_id": "20260610-011304-877f5b",
+      "weight": 0.06585372322730548
+    },
+    {
+      "label": "catboost-optuna-rocauc",
+      "run_id": "20260603-022850-0b0f8e",
+      "weight": 0.19323293873431407
+    },
+    {
+      "label": "catboost-gpu-fe-min3",
+      "run_id": "20260611-051031-5d6bc5",
+      "weight": 0.3235886635982743
+    },
+    {
+      "label": "xgb-optuna-rocauc",
+      "run_id": "20260602-230901-6299f4",
+      "weight": 0.1891563495426854
+    },
+    {
+      "label": "catboost-optuna-acc",
+      "run_id": "20260531-004004-2099df",
+      "weight": 0.1209180406631778
+    },
+    {
+      "label": "lgbm-catreg-fe_v3-study",
+      "run_id": "20260610-175448-197ff7",
+      "weight": 0.34910667782973337
+    },
+    {
+      "label": "lgbm-optuna-rocauc",
+      "run_id": "20260603-010341-c827a4",
+      "weight": 0.10331134669191246
+    },
+    {
+      "label": "lgbm-optuna-acc",
+      "run_id": "20260530-213332-75d6cf",
+      "weight": -0.036130996252375244
+    },
+    {
+      "label": "lgbm-catreg-fe-nocross5",
+      "run_id": "20260611-001429-ba1eef",
+      "weight": -0.10300766424257089
+    },
+    {
+      "label": "catboost-gpu-fe-v3-full",
+      "run_id": "20260611-011634-c13e8d",
+      "weight": 0.3137716447795359
+    },
+    {
+      "label": "xgb-refined-best-fe_v3",
+      "run_id": "20260610-051307-62d4fa",
+      "weight": 0.15228940931281673
+    },
+    {
+      "label": "lgbm-refined-best-native-updated",
+      "run_id": "20260610-022241-f045cf",
+      "weight": -0.09987088359212619
+    },
+    {
+      "label": "ebm-optuna-fe_v0_native",
+      "run_id": "20260612-215050-37f152",
+      "weight": 0.14320367106315884
+    },
+    {
+      "label": "lgbm-optuna-best",
+      "run_id": "20260609-193338-178efc",
+      "weight": 0.21297322759873943
+    },
+    {
+      "label": "xgb-perfold-aggr-fe_v6",
+      "run_id": "20260626-234321-3aaedc",
+      "weight": -0.30607271025855126
+    },
+    {
+      "label": "lgbm-refined-best-fe_v3-updated",
+      "run_id": "20260610-040114-9a5b27",
+      "weight": -0.008482819404315597
+    },
+    {
+      "label": "lgbm-perfold-aggr-fe_v6",
+      "run_id": "20260626-223318-c2cbf6",
+      "weight": -0.3854217904352915
+    },
+    {
+      "label": "lgbm-refined-best-fe_v3",
+      "run_id": "20260610-032427-a495a7",
+      "weight": 0.061315321029723334
+    },
+    {
+      "label": "lgbm-refined-fe_v3-study",
+      "run_id": "20260610-123628-24ca03",
+      "weight": -0.13472638899656378
+    },
+    {
+      "label": "xgb-stack-pl-fe_v5",
+      "run_id": "20260626-012036-d7da30",
+      "weight": -0.0948394664317003
+    },
+    {
+      "label": "lgbm-stack-pl-fe_v5",
+      "run_id": "20260626-011647-e332df",
+      "weight": -0.09886000906749774
+    },
+    {
+      "label": "catboost-stack-pl-fe_v5",
+      "run_id": "20260626-143020-10be49",
+      "weight": 0.22042934531469974
+    },
+    {
+      "label": "lgbm-untuned",
+      "run_id": "20260531-161803-9f4f16",
+      "weight": -0.2688248268540335
+    },
+    {
+      "label": "xgb-stack-pl100-aggr-fe_v5",
+      "run_id": "20260626-160354-2b7a8b",
+      "weight": -0.05975867305709554
+    },
+    {
+      "label": "catboost-stack-pl100-aggr-fe_v5",
+      "run_id": "20260626-213852-f1e626",
+      "weight": 0.024391622070456368
+    },
+    {
+      "label": "lgbm-stack-pl100-aggr-fe_v5",
+      "run_id": "20260626-153921-bc316f",
+      "weight": -0.15876981674478766
+    },
+    {
+      "label": "rf-optuna-fe_v4_native",
+      "run_id": "20260612-133154-c3656f",
+      "weight": 0.17345626302418327
+    },
+    {
+      "label": "tabpfn-subfold-bag3",
+      "run_id": "20260612-063413-30f430",
+      "weight": -0.006906017902841295
+    },
+    {
+      "label": "tabicl-subfold-bag3",
+      "run_id": "20260612-031158-5adf7a",
+      "weight": 0.12602101831667514
+    },
+    {
+      "label": "rf-optuna-fe_v0",
+      "run_id": "20260612-072103-f400e6",
+      "weight": -0.07322912256666396
+    },
+    {
+      "label": "realmlp-fe-min3",
+      "run_id": "20260612-185205-91e530",
+      "weight": -0.09877009573752013
+    },
+    {
+      "label": "tabm-optuna-fe-min3",
+      "run_id": "20260612-181438-3a3dd2",
+      "weight": 0.053164479271483864
+    },
+    {
+      "label": "tabm-baseline",
+      "run_id": "20260601-022539-10bd38",
+      "weight": -0.09760399758236234
+    },
+    {
+      "label": "realmlp-baseline",
+      "run_id": "20260603-021557-d716c1",
+      "weight": -0.03480114127300705
+    },
+    {
+      "label": "et-optuna-fe_v4_native",
+      "run_id": "20260613-013703-1dde6d",
+      "weight": 0.04990669414179963
+    },
+    {
+      "label": "et-optuna-fe_v0_native",
+      "run_id": "20260612-235928-72aa26",
+      "weight": 0.020708498120446752
+    },
+    {
+      "label": "lr-targetenc-crosses-native",
+      "run_id": "20260610-030317-343e5b",
+      "weight": -0.02143837464671095
+    },
+    {
+      "label": "lr-pipeline",
+      "run_id": "20260530-172907-681409",
+      "weight": -0.002909120293171883
+    },
+    {
+      "label": "lr-pipeline|fe_v1",
+      "run_id": "20260609-192501-62906a",
+      "weight": -0.003982139257379
+    },
+    {
+      "label": "xgb-perfold-pl100-aggr-fe_v6",
+      "run_id": "20260627-010529-54ffed",
+      "weight": 0.03979487312137452
+    },
+    {
+      "label": "lgbm-perfold-pl100-aggr-fe_v6",
+      "run_id": "20260627-001558-91ed86",
+      "weight": 0.051358800873133464
+    }
+  ],
+  "scheme": {
+    "scheme": "logit_stack_lr",
+    "feature_scale": "logit",
+    "pool": "full",
+    "C": 0.1,
+    "members": [
+      "lgbm-catreg-fe-min3",
+      "xgb-coupled-fe-min3",
+      "ebm-optuna-fe_v4_native",
+      "xgb-coupled-fe-nocross5",
+      "lgbm-refined-best",
+      "xgb-optuna-acc",
+      "lgbm-refined-best-native",
+      "catboost-optuna-rocauc",
+      "catboost-gpu-fe-min3",
+      "xgb-optuna-rocauc",
+      "catboost-optuna-acc",
+      "lgbm-catreg-fe_v3-study",
+      "lgbm-optuna-rocauc",
+      "lgbm-optuna-acc",
+      "lgbm-catreg-fe-nocross5",
+      "catboost-gpu-fe-v3-full",
+      "xgb-refined-best-fe_v3",
+      "lgbm-refined-best-native-updated",
+      "ebm-optuna-fe_v0_native",
+      "lgbm-optuna-best",
+      "xgb-perfold-aggr-fe_v6",
+      "lgbm-refined-best-fe_v3-updated",
+      "lgbm-perfold-aggr-fe_v6",
+      "lgbm-refined-best-fe_v3",
+      "lgbm-refined-fe_v3-study",
+      "xgb-stack-pl-fe_v5",
+      "lgbm-stack-pl-fe_v5",
+      "catboost-stack-pl-fe_v5",
+      "lgbm-untuned",
+      "xgb-stack-pl100-aggr-fe_v5",
+      "catboost-stack-pl100-aggr-fe_v5",
+      "lgbm-stack-pl100-aggr-fe_v5",
+      "rf-optuna-fe_v4_native",
+      "tabpfn-subfold-bag3",
+      "tabicl-subfold-bag3",
+      "rf-optuna-fe_v0",
+      "realmlp-fe-min3",
+      "tabm-optuna-fe-min3",
+      "tabm-baseline",
+      "realmlp-baseline",
+      "et-optuna-fe_v4_native",
+      "et-optuna-fe_v0_native",
+      "lr-targetenc-crosses-native",
+      "lr-pipeline",
+      "lr-pipeline|fe_v1",
+      "xgb-perfold-pl100-aggr-fe_v6",
+      "lgbm-perfold-pl100-aggr-fe_v6"
+    ],
+    "coef": [
+      0.1765797058811153,
+      0.18813067210897427,
+      1.0263339685860806,
+      0.1700889586984079,
+      0.03556998923839398,
+      0.25617938763213577,
+      0.06585372322730548,
+      0.19323293873431407,
+      0.3235886635982743,
+      0.1891563495426854,
+      0.1209180406631778,
+      0.34910667782973337,
+      0.10331134669191246,
+      -0.036130996252375244,
+      -0.10300766424257089,
+      0.3137716447795359,
+      0.15228940931281673,
+      -0.09987088359212619,
+      0.14320367106315884,
+      0.21297322759873943,
+      -0.30607271025855126,
+      -0.008482819404315597,
+      -0.3854217904352915,
+      0.061315321029723334,
+      -0.13472638899656378,
+      -0.0948394664317003,
+      -0.09886000906749774,
+      0.22042934531469974,
+      -0.2688248268540335,
+      -0.05975867305709554,
+      0.024391622070456368,
+      -0.15876981674478766,
+      0.17345626302418327,
+      -0.006906017902841295,
+      0.12602101831667514,
+      -0.07322912256666396,
+      -0.09877009573752013,
+      0.053164479271483864,
+      -0.09760399758236234,
+      -0.03480114127300705,
+      0.04990669414179963,
+      0.020708498120446752,
+      -0.02143837464671095,
+      -0.002909120293171883,
+      -0.003982139257379,
+      0.03979487312137452,
+      0.051358800873133464
+    ]
+  },
+  "cv_config": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "random_state": 42,
+    "shuffle": true
+  }
+}

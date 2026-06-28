@@ -1,0 +1,1 @@
+LightGBM stack on the curated pool's OOF, 50-trial shallow/regularised Optuna (seed 42), CV'd over the seed-42 folds; test refit on all OOF.

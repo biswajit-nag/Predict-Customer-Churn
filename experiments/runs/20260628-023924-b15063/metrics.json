@@ -1,0 +1,116 @@
+{
+  "oof_roc_auc": 0.9170620431623028,
+  "fold_roc_aucs": [
+    0.9168081680694165,
+    0.9176493578163533,
+    0.9171742181223168,
+    0.918284192239461,
+    0.9154335004167523
+  ],
+  "fold_roc_auc_mean": 0.91706988733286,
+  "fold_roc_auc_std": 0.0009557684314863868,
+  "oof_accuracy": 0.8622840351804293,
+  "fold_scores": [
+    0.8620402393153762,
+    0.8619224328713638,
+    0.8619308476173647,
+    0.863849409705568,
+    0.8616772412864572
+  ],
+  "fold_acc_mean": 0.8622840341592258,
+  "fold_acc_std": 0.0007916476921145962,
+  "members": [
+    {
+      "label": "lgbm-catreg-fe-min3",
+      "run_id": "20260610-183508-48286b",
+      "weight": 0.22333333333333336
+    },
+    {
+      "label": "xgb-coupled-fe-min3",
+      "run_id": "20260610-200857-74b63f",
+      "weight": 0.23
+    },
+    {
+      "label": "ebm-optuna-fe_v4_native",
+      "run_id": "20260612-202507-e65b68",
+      "weight": 0.3533333333333333
+    },
+    {
+      "label": "catboost-optuna-rocauc",
+      "run_id": "20260603-022850-0b0f8e",
+      "weight": 0.15333333333333335
+    },
+    {
+      "label": "rf-optuna-fe_v4_native",
+      "run_id": "20260612-133154-c3656f",
+      "weight": 0.026666666666666665
+    },
+    {
+      "label": "tabpfn-subfold-bag3",
+      "run_id": "20260612-063413-30f430",
+      "weight": 0.0
+    },
+    {
+      "label": "tabicl-subfold-bag3",
+      "run_id": "20260612-031158-5adf7a",
+      "weight": 0.013333333333333332
+    },
+    {
+      "label": "realmlp-fe-min3",
+      "run_id": "20260612-185205-91e530",
+      "weight": 0.0
+    },
+    {
+      "label": "tabm-optuna-fe-min3",
+      "run_id": "20260612-181438-3a3dd2",
+      "weight": 0.0
+    },
+    {
+      "label": "et-optuna-fe_v4_native",
+      "run_id": "20260613-013703-1dde6d",
+      "weight": 0.0
+    },
+    {
+      "label": "lr-pipeline|fe_v1",
+      "run_id": "20260609-192501-62906a",
+      "weight": 0.0
+    }
+  ],
+  "scheme": {
+    "scheme": "bagged_hill_climb",
+    "feature_scale": "prob",
+    "pool": "curated",
+    "members": [
+      "lgbm-catreg-fe-min3",
+      "xgb-coupled-fe-min3",
+      "ebm-optuna-fe_v4_native",
+      "catboost-optuna-rocauc",
+      "rf-optuna-fe_v4_native",
+      "tabpfn-subfold-bag3",
+      "tabicl-subfold-bag3",
+      "realmlp-fe-min3",
+      "tabm-optuna-fe-min3",
+      "et-optuna-fe_v4_native",
+      "lr-pipeline|fe_v1"
+    ],
+    "weights": [
+      0.22333333333333336,
+      0.23,
+      0.3533333333333333,
+      0.15333333333333335,
+      0.026666666666666665,
+      0.0,
+      0.013333333333333332,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "cv_config": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "random_state": 42,
+    "shuffle": true
+  }
+}
