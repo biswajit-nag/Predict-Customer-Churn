@@ -1,0 +1,1 @@
+Controlled masking test: xgb on fe_v6_perfold, REUSING the tuned hyperparameters of 20260626-234321-3aaedc (per-fold aggressive, no pseudo) so masking is the only change. train-time per-fold dropout 0.5: present per-fold values randomly NaN-ed at fit; prediction unmasked. scripts/run_perfold_masking.py.

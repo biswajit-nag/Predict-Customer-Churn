@@ -116,6 +116,71 @@ def build_stacked_dataset(
     return train_df, test_df
 
 
+class PerFoldMaskingClassifier:
+    """Wrap a base GBDT to probe/repair the per-fold missingness asymmetry.
+
+    The per-fold dataset is unavoidably asymmetric: a train row has at most 1/5
+    per-fold columns filled (only its held-out fold is leakage-free), while test
+    rows have all 5 filled. A tree fit on the 1/5-filled pattern then meets an
+    all-5-filled pattern at test time it never trained on. Two label-free knobs:
+
+    test_mask_bag : bool
+        At predict time, present X in `n_folds` masked views — view k keeps only
+        the `*_f{k}` per-fold columns and NaNs the other folds — and average the
+        per-view probabilities. Every forward pass then has the train-like
+        (<=1-per-model) density, and bagging recovers information across folds.
+        Applied to BOTH validation (OOF) and test, so the OOF estimate is computed
+        under the same inference scheme as the test prediction.
+    train_dropout : float in [0, 1)
+        At fit time, randomly NaN each present per-fold value with this
+        probability — feature-dropout regularization against over-reliance on the
+        per-fold columns. Prediction is left unmasked unless test_mask_bag is set.
+
+    Designed for run_cv_experiment: exposes get_params/fit/predict_proba and stays
+    out of the way of the LightGBM-importance check (no booster_ attribute).
+    """
+
+    def __init__(self, base_factory, perfold_cols, test_mask_bag=False,
+                 train_dropout=0.0, n_folds=5, seed=42, params=None):
+        self.base_factory = base_factory
+        self.perfold_cols = list(perfold_cols)
+        self.test_mask_bag = bool(test_mask_bag)
+        self.train_dropout = float(train_dropout)
+        self.n_folds = int(n_folds)
+        self.seed = int(seed)
+        self.params = dict(params or {})
+        self._fold_of = {c: int(c.rsplit("_f", 1)[1]) for c in self.perfold_cols}
+
+    def get_params(self, deep=True):
+        return {"_mask_test_bag": self.test_mask_bag,
+                "_train_dropout": self.train_dropout,
+                "_mask_n_folds": self.n_folds, **self.params}
+
+    def fit(self, X, y):
+        Xf = X
+        if self.train_dropout > 0:
+            rng = np.random.RandomState(self.seed)
+            drop = rng.random_sample(X[self.perfold_cols].shape) < self.train_dropout
+            Xf = X.copy()
+            Xf[self.perfold_cols] = X[self.perfold_cols].mask(drop)
+        self.model_ = self.base_factory()
+        self.model_.fit(Xf, y)
+        self.classes_ = getattr(self.model_, "classes_", np.array([0, 1]))
+        return self
+
+    def predict_proba(self, X):
+        if not self.test_mask_bag:
+            return self.model_.predict_proba(X)
+        acc = None
+        for k in range(self.n_folds):
+            drop = [c for c in self.perfold_cols if self._fold_of[c] != k]
+            Xk = X.copy()
+            Xk[drop] = np.nan
+            p = self.model_.predict_proba(Xk)
+            acc = p if acc is None else acc + p
+        return acc / self.n_folds
+
+
 def build_perfold_dataset(
     base_version: str,
     fold_run_ids: dict[str, str],
