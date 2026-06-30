@@ -36,6 +36,14 @@ CHECK_IDS = [
     ("20260611-001429-ba1eef", "kaggle"),
     ("20260611-011634-c13e8d", "kaggle"),
     ("20260611-051031-5d6bc5", "kaggle"),
+    # fe_v3/fe_v4 Optuna refinement batch (2026-06-28 Kaggle, 2026-06-29 local finalize)
+    ("20260628-110124-485af0", "kaggle"),   # catboost fe_v3
+    ("20260628-054913-ef8595", "kaggle"),   # lgbm fe_v3
+    ("20260628-091724-48ab31", "kaggle"),   # xgb fe_v3
+    ("20260628-080619-b4d2ca", "kaggle"),   # xgb fe_v4 (best Kaggle)
+    ("20260628-183230-86782f", "local"),    # lgbm fe_v4 finalize
+    ("20260629-135226-d1f447", "local"),    # catboost fe_v4 finalize (CPU)
+    ("20260629-161428-7f0bce", "local"),    # ebm fe_v4 finalize
 ]
 
 

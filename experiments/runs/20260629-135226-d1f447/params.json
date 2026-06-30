@@ -1,0 +1,12 @@
+{
+  "random_strength": 1.672960517,
+  "border_count": 253,
+  "verbose": 0,
+  "iterations": 3936,
+  "bagging_temperature": 0.2839110834,
+  "loss_function": "Logloss",
+  "l2_leaf_reg": 7.850329164,
+  "depth": 5,
+  "random_seed": 42,
+  "learning_rate": 0.05087942053
+}
