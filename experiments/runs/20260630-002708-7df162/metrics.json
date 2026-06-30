@@ -1,0 +1,97 @@
+{
+  "oof_roc_auc": 0.9159627774935751,
+  "fold_roc_aucs": [
+    0.9155721657421855,
+    0.9167191262587624,
+    0.9160320356087195,
+    0.917129687744809,
+    0.9144249693529235
+  ],
+  "fold_roc_auc_mean": 0.91597559694148,
+  "fold_roc_auc_std": 0.0009439437909222618,
+  "oof_accuracy": NaN,
+  "fold_scores": [],
+  "fold_acc_mean": NaN,
+  "fold_acc_std": NaN,
+  "members": [
+    {
+      "label": "lgbm-optuna-fe_v4_native-top2",
+      "run_id": "20260628-183230-86782f",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "xgb-optuna-fe_v4_native-top3",
+      "run_id": "20260628-080619-b4d2ca",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "ebm-optuna-fe_v4_native-top3",
+      "run_id": "20260629-161428-7f0bce",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "catboost-optuna-fe_v4_native-top1",
+      "run_id": "20260629-135226-d1f447",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "rf-optuna-fe_v4_native",
+      "run_id": "20260612-133154-c3656f",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "tabpfn-subfold-bag3",
+      "run_id": "20260612-063413-30f430",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "tabicl-subfold-bag3",
+      "run_id": "20260612-031158-5adf7a",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "realmlp-fe-min3",
+      "run_id": "20260612-185205-91e530",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "tabm-optuna-fe-min3",
+      "run_id": "20260612-181438-3a3dd2",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "et-optuna-fe_v4_native",
+      "run_id": "20260613-013703-1dde6d",
+      "weight": 0.09090909090909091
+    },
+    {
+      "label": "lr-pipeline|fe_v1",
+      "run_id": "20260609-192501-62906a",
+      "weight": 0.09090909090909091
+    }
+  ],
+  "scheme": {
+    "scheme": "rank_mean",
+    "feature_scale": "rank",
+    "pool": "curated",
+    "members": [
+      "lgbm-optuna-fe_v4_native-top2",
+      "xgb-optuna-fe_v4_native-top3",
+      "ebm-optuna-fe_v4_native-top3",
+      "catboost-optuna-fe_v4_native-top1",
+      "rf-optuna-fe_v4_native",
+      "tabpfn-subfold-bag3",
+      "tabicl-subfold-bag3",
+      "realmlp-fe-min3",
+      "tabm-optuna-fe-min3",
+      "et-optuna-fe_v4_native",
+      "lr-pipeline|fe_v1"
+    ]
+  },
+  "cv_config": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "random_state": 42,
+    "shuffle": true
+  }
+}

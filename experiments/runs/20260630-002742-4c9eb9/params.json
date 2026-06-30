@@ -1,0 +1,32 @@
+{
+  "scheme": "logit_stack_lr",
+  "feature_scale": "logit",
+  "pool": "curated",
+  "C": 1.0,
+  "members": [
+    "lgbm-optuna-fe_v4_native-top2",
+    "xgb-optuna-fe_v4_native-top3",
+    "ebm-optuna-fe_v4_native-top3",
+    "catboost-optuna-fe_v4_native-top1",
+    "rf-optuna-fe_v4_native",
+    "tabpfn-subfold-bag3",
+    "tabicl-subfold-bag3",
+    "realmlp-fe-min3",
+    "tabm-optuna-fe-min3",
+    "et-optuna-fe_v4_native",
+    "lr-pipeline|fe_v1"
+  ],
+  "coef": [
+    0.6765406961503443,
+    0.634640474215425,
+    0.9358841060846312,
+    0.6405153413863893,
+    0.16218689368184677,
+    -0.03466434828199435,
+    0.034124404313014604,
+    -0.0932496003148092,
+    -0.10199418095490918,
+    -0.07270946178230416,
+    -0.005248116157399037
+  ]
+}

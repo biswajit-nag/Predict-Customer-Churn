@@ -1,0 +1,1 @@
+L2 logistic stack (C=1) on standardized logit-OOF of the curated pool; OOF CV'd over the seed-42 folds, test refit on all OOF. Pre-registered robust combiner (technical_review.md §2.1).

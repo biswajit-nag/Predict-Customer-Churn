@@ -1,0 +1,1 @@
+Strength-weighted mean of the curated pool, weights = softmax(OOF AUC / T=0.001). Concentrates mass on the strongest members.

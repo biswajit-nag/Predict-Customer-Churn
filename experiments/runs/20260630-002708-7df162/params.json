@@ -1,0 +1,18 @@
+{
+  "scheme": "rank_mean",
+  "feature_scale": "rank",
+  "pool": "curated",
+  "members": [
+    "lgbm-optuna-fe_v4_native-top2",
+    "xgb-optuna-fe_v4_native-top3",
+    "ebm-optuna-fe_v4_native-top3",
+    "catboost-optuna-fe_v4_native-top1",
+    "rf-optuna-fe_v4_native",
+    "tabpfn-subfold-bag3",
+    "tabicl-subfold-bag3",
+    "realmlp-fe-min3",
+    "tabm-optuna-fe-min3",
+    "et-optuna-fe_v4_native",
+    "lr-pipeline|fe_v1"
+  ]
+}
