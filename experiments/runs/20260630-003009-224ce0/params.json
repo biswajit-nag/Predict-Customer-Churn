@@ -1,0 +1,28 @@
+{
+  "scheme": "lgbm_stack",
+  "feature_scale": "prob",
+  "pool": "curated",
+  "members": [
+    "lgbm-optuna-fe_v4_native-top2",
+    "xgb-optuna-fe_v4_native-top3",
+    "ebm-optuna-fe_v4_native-top3",
+    "catboost-optuna-fe_v4_native-top1",
+    "rf-optuna-fe_v4_native",
+    "tabpfn-subfold-bag3",
+    "tabicl-subfold-bag3",
+    "realmlp-fe-min3",
+    "tabm-optuna-fe-min3",
+    "et-optuna-fe_v4_native",
+    "lr-pipeline|fe_v1"
+  ],
+  "lgbm_params": {
+    "n_estimators": 443,
+    "learning_rate": 0.02193870127588857,
+    "num_leaves": 43,
+    "max_depth": 3,
+    "min_child_samples": 434,
+    "subsample": 0.6802407359630315,
+    "colsample_bytree": 0.7177458283419876,
+    "reg_lambda": 0.2198453917464033
+  }
+}

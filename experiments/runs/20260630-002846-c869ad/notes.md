@@ -1,0 +1,1 @@
+Bagged Caruana ensemble selection (25 bags, frac 0.5, seed 42) on the curated pool's OOF probabilities. Convex weights = selection frequency.

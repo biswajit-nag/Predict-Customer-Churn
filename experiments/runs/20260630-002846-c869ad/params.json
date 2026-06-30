@@ -1,0 +1,31 @@
+{
+  "scheme": "bagged_hill_climb",
+  "feature_scale": "prob",
+  "pool": "curated",
+  "members": [
+    "lgbm-optuna-fe_v4_native-top2",
+    "xgb-optuna-fe_v4_native-top3",
+    "ebm-optuna-fe_v4_native-top3",
+    "catboost-optuna-fe_v4_native-top1",
+    "rf-optuna-fe_v4_native",
+    "tabpfn-subfold-bag3",
+    "tabicl-subfold-bag3",
+    "realmlp-fe-min3",
+    "tabm-optuna-fe-min3",
+    "et-optuna-fe_v4_native",
+    "lr-pipeline|fe_v1"
+  ],
+  "weights": [
+    0.22142857142857142,
+    0.25142857142857145,
+    0.35714285714285715,
+    0.13,
+    0.026666666666666665,
+    0.0,
+    0.013333333333333332,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ]
+}
