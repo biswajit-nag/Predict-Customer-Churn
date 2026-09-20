@@ -10,7 +10,7 @@ Two encodings are supported and cached to separate parquets:
 - encoding="native": categorical columns are kept as raw strings under pandas
   `category` dtype. LightGBM consumes these directly (optimal split search on
   categories); CatBoost takes the raw strings via cat_features. This is the
-  data path for the native-categoricals work in docs/fe_ideas.md §1.
+  data path for the native-categoricals work in docs/archive/fe_ideas.md §1.
 
 Usage
 -----

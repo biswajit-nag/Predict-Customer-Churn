@@ -9,7 +9,7 @@ into the run's row in experiments/runs.csv (the lb_public / lb_private columns).
 Why shell out to the `kaggle` CLI rather than import the kaggle package:
 the CLI is installed and on PATH here, while the Python package is not in the
 project venv. The CLI reads credentials from the KAGGLE_USERNAME / KAGGLE_KEY
-environment variables or ~/.kaggle/kaggle.json — see docs/kaggle_setup.md.
+environment variables or ~/.kaggle/kaggle.json — see docs/reference/kaggle_setup.md.
 
 Public API
 ----------
@@ -88,12 +88,12 @@ def _require_credentials() -> None:
     if shutil.which("kaggle") is None:
         raise RuntimeError(
             "The `kaggle` CLI is not on PATH. Install it (`pip install kaggle`) "
-            "and see docs/kaggle_setup.md."
+            "and see docs/reference/kaggle_setup.md."
         )
     if not credentials_available():
         raise RuntimeError(
             "Kaggle credentials not found. Set KAGGLE_USERNAME and KAGGLE_KEY "
-            "(or place ~/.kaggle/kaggle.json). See docs/kaggle_setup.md."
+            "(or place ~/.kaggle/kaggle.json). See docs/reference/kaggle_setup.md."
         )
 
 

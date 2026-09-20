@@ -324,7 +324,7 @@ def save_experiment(result: dict, submit: bool = False, wait: bool = True) -> st
         If True, also submit this run's bagged test predictions
         (test_proba_mean) to Kaggle and write the returned public/private
         leaderboard scores back into the run's runs.csv row. Requires Kaggle
-        API credentials (see src/kaggle_io.py and docs/kaggle_setup.md).
+        API credentials (see src/kaggle_io.py and docs/reference/kaggle_setup.md).
     wait : bool
         When submit=True, block until Kaggle finishes scoring so the LB columns
         are filled in this call. If False, fire the submission and return; run

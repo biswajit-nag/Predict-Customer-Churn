@@ -2,7 +2,7 @@
 to a base feature set, producing a new cached data_version.
 
 This is **stacking via meta-features** (a.k.a. model-as-feature-extractor / the
-"TFM-as-feature-extractor" pattern in docs/fe_ideas.md §3): every *training* row
+"TFM-as-feature-extractor" pattern in docs/archive/fe_ideas.md §3): every *training* row
 gets each diverse base model's leakage-free **out-of-fold** probability, and
 every *test* row gets that model's **bagged test-mean** probability. A downstream
 GBDT then trains on the original features *plus* these probability columns.

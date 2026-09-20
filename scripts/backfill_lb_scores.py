@@ -24,7 +24,7 @@ Usage
     # everything still missing (will pause at the daily limit):
     python scripts/backfill_lb_scores.py --max 1000
 
-Prerequisites: Kaggle credentials configured — see docs/kaggle_setup.md.
+Prerequisites: Kaggle credentials configured — see docs/reference/kaggle_setup.md.
 """
 
 import argparse
@@ -71,7 +71,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if not credentials_available():
-        sys.exit("Kaggle credentials not configured — see docs/kaggle_setup.md.")
+        sys.exit("Kaggle credentials not configured — see docs/reference/kaggle_setup.md.")
 
     runs = pd.read_csv(RUNS_CSV)
     runs = runs[runs["status"] == "success"]
