@@ -16,7 +16,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.tracking import DATA_DIR, PROJECT_ROOT, RUNS_DIR, load_runs  # noqa: E402
 
 RUNS = {

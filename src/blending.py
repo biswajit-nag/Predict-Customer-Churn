@@ -1,9 +1,10 @@
 """Log post-hoc blends of base-run OOF predictions as first-class `runs.csv` rows.
 
-`blending.ipynb` combines the logged base runs (equal/rank/strength means, bagged
-hill climbing, logistic / LightGBM stacks) but only ever reports a single *pooled*
-OOF ROC-AUC per strategy, and never persists the result. This module closes both
-gaps, per docs/technical_review.md §2.2:
+`03_Blending.ipynb` combines the logged base runs (equal/rank/strength means, bagged
+hill climbing, logistic / LightGBM stacks). A single *pooled* OOF ROC-AUC per
+strategy is not enough to judge a blend whose gain is a few ten-thousandths, and a
+blend that is never persisted cannot be scored on the leaderboard. This module
+handles both:
 
   * `fold_aucs` scores a blend's OOF vector **per canonical seed-42 fold**, so the
     blend gets the same `fold_roc_auc_mean` / `fold_roc_auc_std` every base run
@@ -38,7 +39,6 @@ from sklearn.preprocessing import StandardScaler
 
 from src.cv import PRIMARY_METRIC_NAME
 from src.tracking import (
-    DATA_DIR,
     EXPERIMENTS_DIR,
     PROJECT_ROOT,
     RUNS_CSV,
@@ -55,7 +55,7 @@ from src.tracking import (
 CANON_N = 594_194   # full training-set size; runs with shorter OOF are subsamples
 N_TEST = 254_655    # canonical test-set size
 
-# model_class -> (broad family, engine). Mirrors blending.ipynb's TAXONOMY so the
+# model_class -> (broad family, engine). Mirrors 03_Blending.ipynb's TAXONOMY so the
 # curated pool reproduces the notebook exactly.
 TAXONOMY = {
     "LGBMClassifier":                ("Boosted trees", "LightGBM"),
@@ -95,10 +95,14 @@ def load_target_and_folds() -> tuple[np.ndarray, np.ndarray]:
     """Return (y, folds): the churn target and canonical seed-42 fold id per train row.
 
     Folds are merged on `id` (not assumed by row order) so the assignment is robust
-    regardless of how the parquet is sorted — the same guard build_perfold_dataset
-    uses.
+    regardless of how the frame is sorted — the same guard build_perfold_dataset
+    uses. The target comes from prepare_data(), which never reorders rows, so it is
+    in raw train.csv order — the order every saved OOF vector follows.
     """
-    train = pd.read_parquet(DATA_DIR / "train_df_fe_v0.parquet", columns=["id", "Churn"])
+    from src.data import prepare_data
+
+    train, _ = prepare_data(encoding="native")
+    train = train[["id", "Churn"]]
     fold_map = pd.read_csv(EXPERIMENTS_DIR / "cv_folds_seed42.csv.gz")
     folds = train[["id"]].merge(fold_map, on="id", how="left")["fold"].to_numpy()
     if np.isnan(folds).any():
@@ -106,7 +110,8 @@ def load_target_and_folds() -> tuple[np.ndarray, np.ndarray]:
     return train["Churn"].to_numpy(), folds.astype(int)
 
 
-def load_aligned_runs(y: np.ndarray) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_aligned_runs(y: np.ndarray, exclude_versions: tuple[str, ...] = ("blend_v1",)
+                      ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load every full-set base run's OOF and test-mean vectors, row-aligned.
 
     Returns (oof, test, meta, spearman):
@@ -119,11 +124,17 @@ def load_aligned_runs(y: np.ndarray) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
     Runs whose OOF is not CANON_N rows (subsample EDA passes) are skipped — they do
     not align row-wise. Each kept run's OOF is re-asserted to reproduce its logged
     ROC-AUC (the row-alignment guard from scripts/check_oof_alignment.py) before use.
+
+    `exclude_versions` lists `data_version` values to leave out. Blends
+    (`blend_v1`) are always excluded: a blend must never be a member of a blend.
+    Pass `("blend_v1", "fe_v5_stack", "fe_v6_perfold")` to keep only level-1 base
+    models (the level-2 runs are GBDTs trained on other models' OOF columns).
     """
     runs = pd.read_csv(RUNS_CSV).dropna(subset=["run_id"])
     # Exclude previously-logged blends: a blend must never be a member of a blend
     # (keeps load idempotent across re-runs of log_headline_blends).
-    runs = runs[runs["data_version"] != "blend_v1"]
+    exclude = set(exclude_versions) | {"blend_v1"}
+    runs = runs[~runs["data_version"].isin(exclude)]
     runs = (runs[runs["status"] == "success"]
             .sort_values("oof_roc_auc", ascending=False)
             .reset_index(drop=True))
@@ -138,13 +149,21 @@ def load_aligned_runs(y: np.ndarray) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
         if abs(recomputed - float(r["oof_roc_auc"])) > 1e-9:
             raise AssertionError(f"{r['run_id']} OOF not row-aligned "
                                  f"({recomputed:.9f} != {float(r['oof_roc_auc']):.9f})")
-        label = r["tag"] if r["tag"] not in seen else f"{r['tag']}|{r['data_version']}"
-        seen.add(r["tag"])
+        # Disambiguate shared tags by data_version, then by run_id if still taken,
+        # so three runs sharing tag *and* data_version cannot collide.
+        label = r["tag"]
+        if label in seen:
+            label = f"{r['tag']}|{r['data_version']}"
+        if label in seen:
+            label = f"{r['tag']}|{r['data_version']}|{str(r['run_id'])[-6:]}"
+        seen.add(label)
         oof_cols.append(proba)
         test_cols.append(np.load(run_dir / "test_proba_mean.npy"))
         labels.append(label)
         kept.append(r)
 
+    if len(set(labels)) != len(labels):
+        raise AssertionError("duplicate run labels in the aligned OOF matrix")
     oof = pd.DataFrame(np.column_stack(oof_cols), columns=labels)
     test = pd.DataFrame(np.column_stack(test_cols), columns=labels)
     meta = pd.DataFrame(kept)[["tag", "model_class", "data_version", "oof_roc_auc", "run_id"]]
@@ -163,7 +182,7 @@ def load_aligned_runs(y: np.ndarray) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
 def curate_pool(meta: pd.DataFrame) -> list[str]:
     """Best-OOF-AUC run per engine, except the linear slot picked by diversity.
 
-    Reproduces blending.ipynb's curation: one representative per engine (max
+    Reproduces 03_Blending.ipynb's curation: one representative per engine (max
     oof_roc_auc), but the single Logistic slot is chosen by **lowest mean_rho**
     (most de-correlated) because a linear model never wins on standalone AUC here.
     """
@@ -526,7 +545,7 @@ def build_headline_blends(oof, test, meta, curated, full, y, folds, *,
               "C": curated_stack_C, "members": [c for c in curated], "coef": coef},
         notes=(f"L2 logistic stack (C={curated_stack_C:g}) on standardized logit-OOF "
                "of the curated pool; OOF CV'd over the seed-42 folds, test refit on all "
-               "OOF. Pre-registered robust combiner (technical_review.md §2.1).")))
+               "OOF. Pre-registered robust combiner.")))
 
     # 3. best logit stack — full pool, pinned to the notebook sweep winner
     oof_p, test_p, coef = logit_stack(oof, test, full, y, folds, best_stack_C)
@@ -538,7 +557,7 @@ def build_headline_blends(oof, test, meta, curated, full, y, folds, *,
               "C": best_stack_C, "members": [c for c in full], "coef": coef},
         notes=(f"L2 logistic stack (C={best_stack_C:g}) on standardized logit-OOF of all "
                f"{len(full)} aligned runs — the (pool, C) cell carried to submission in "
-               "blending.ipynb. Strong L2 tames the multicollinear full pool.")))
+               "the blending notebook. Strong L2 tames the multicollinear full pool.")))
 
     # 4. hill-climb (curated)
     oof_p, test_p, w = hill_climb(oof, test, curated, y)
@@ -578,7 +597,7 @@ def build_headline_blends(oof, test, meta, curated, full, y, folds, *,
 
 def summarize_blends(blends: list[dict], y: np.ndarray, folds: np.ndarray,
                      best_single: float, base_fold_std: float) -> pd.DataFrame:
-    """Per-fold AUC mean ± std for each blend vs the best single member (§2.2).
+    """Per-fold AUC mean ± std for each blend vs the best single member.
 
     Display-only (computes no side effects) — the notebook calls this to show the
     significance table; the actual runs.csv logging is done by log_headline_blends /
@@ -601,7 +620,7 @@ def log_headline_blends(submit: bool = False, wait: bool = True,
     """Build, log (and optionally submit) the six headline blends; return a summary.
 
     The returned frame reports each blend's pooled OOF AUC and per-fold mean ± std
-    next to the best single member and the per-fold-noise comparison — the §2.2
+    next to the best single member and the per-fold-noise comparison — the
     "does the gain clear CV noise?" table.
     """
     y, folds = load_target_and_folds()

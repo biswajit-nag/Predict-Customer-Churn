@@ -7,10 +7,14 @@ import json
 from pathlib import Path
 
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_oof_alignment import load_npy_f64  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # scripts/
+import numpy as np  # noqa: E402
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+def load_npy_f64(path):
+    return np.load(path)
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # --- 1. Notebooks: valid JSON, every code cell compiles, zip code is a code cell ---
 for name in ("predict-customer-churn-tabpfn-subfold.ipynb",

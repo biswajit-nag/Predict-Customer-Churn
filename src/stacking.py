@@ -2,7 +2,7 @@
 to a base feature set, producing a new cached data_version.
 
 This is **stacking via meta-features** (a.k.a. model-as-feature-extractor / the
-"TFM-as-feature-extractor" pattern in docs/archive/fe_ideas.md §3): every *training* row
+"TFM-as-feature-extractor" pattern): every *training* row
 gets each diverse base model's leakage-free **out-of-fold** probability, and
 every *test* row gets that model's **bagged test-mean** probability. A downstream
 GBDT then trains on the original features *plus* these probability columns.
@@ -13,7 +13,7 @@ The training-row probabilities are out-of-fold under the canonical
 StratifiedKFold(5, shuffle, seed 42): no row's OOF value was produced by a model
 that trained on that row. As a guard, before attaching each column we re-assert
 that the loaded OOF reproduces the run's logged `oof_roc_auc` to ~1e-9 (the same
-row-alignment check as scripts/check_oof_alignment.py and blending.ipynb). The
+row-alignment check as scripts/check_oof_alignment.py and 03_Blending.ipynb). The
 downstream model should be cross-validated on the *same* seed-42 folds (which
 run_cv_experiment does), keeping the level-2 estimate honest.
 

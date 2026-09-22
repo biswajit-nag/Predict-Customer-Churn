@@ -22,7 +22,7 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore")
 _HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(_HERE.parent))
+sys.path.insert(0, str(_HERE.parents[1]))  # project root
 sys.path.insert(0, str(_HERE))
 
 import numpy as np

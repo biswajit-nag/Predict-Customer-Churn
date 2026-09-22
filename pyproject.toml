@@ -56,5 +56,8 @@ target-version = "py314"
 extend-exclude = ["scripts/archive", "*.ipynb"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B"]
-ignore = ["E501"]
+# Correctness-focused: pyflakes, pycodestyle errors/warnings, bugbear.
+# E402: scripts bootstrap sys.path before importing src.*; E731: lambda model
+# factories are the run_config idiom.
+select = ["E", "F", "W", "B"]
+ignore = ["E501", "E402", "E731", "E741", "B905"]

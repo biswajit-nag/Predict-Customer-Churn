@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.tracking import DATA_DIR, PROJECT_ROOT, RUNS_CSV, RUNS_DIR
+from src.tracking import PROJECT_ROOT, RUNS_CSV, RUNS_DIR
 
 COMPETITION = "playground-series-s6e3"
 N_TEST = 254_655  # canonical test-set row count (must match test_proba_mean length)
@@ -104,20 +104,17 @@ def _require_credentials() -> None:
 def _load_test_ids() -> np.ndarray:
     """Return the test-set `id` column in the canonical row order.
 
-    The OOF/test row order is the raw test.csv order; every processed test
-    parquet preserves it (src/data.py never reorders), so any of them serves as
-    the id source. We try a few names for robustness.
+    The OOF/test row order is the raw test.csv order, and prepare_data() never
+    reorders rows, so its test frame is the id source (built from the raw CSV on
+    first use, then read from the parquet cache).
     """
-    for name in ("test_df.parquet", "test_df_native.parquet", "test_df_fe_v0.parquet"):
-        path = DATA_DIR / name
-        if path.exists():
-            ids = pd.read_parquet(path, columns=["id"])["id"].to_numpy()
-            if len(ids) == N_TEST:
-                return ids
-    raise FileNotFoundError(
-        f"No processed test parquet with {N_TEST} rows found in {DATA_DIR}. "
-        "Run prepare_data() / the FE cell first."
-    )
+    from src.data import prepare_data
+
+    _, test = prepare_data(encoding="native")
+    ids = test["id"].to_numpy()
+    if len(ids) != N_TEST:
+        raise ValueError(f"expected {N_TEST} test rows, got {len(ids)}")
+    return ids
 
 
 def make_submission(run_id: str, out_path: Path | None = None) -> Path:

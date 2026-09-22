@@ -1,174 +1,33 @@
-"""Optuna hyperparameter tuning objectives for LightGBM, XGBoost, and CatBoost.
+"""Optuna hyperparameter-refinement API for the GBDT / EBM engines.
 
-Each public function is a *factory*: it accepts the training data and an
-optional CV splitter, and returns the callable that Optuna optimises.
+Used by the on-platform Kaggle tuning notebooks and by
+``scripts/finalize_local_studies.py``. Design:
 
-Usage
------
-    from src.tuning import lgbm_objective, xgb_objective, catboost_objective
+* **Early stopping instead of tuned tree counts** - a large cap plus an in-fold
+  validation set; the chosen tree count is read back from each fitted model
+  (median across folds, bumped by ``ITER_MULT`` for the larger 5-fold outer fit).
+* **Per-fold pruning** - a manual fold loop reports each fold's score via
+  ``trial.report`` so a ``MedianPruner`` stops clearly weak trials after 1-2 folds
+  (a large saving for slow EBM / CatBoost fits).
+* **Resumable studies** - ``build_study`` persists to SQLite, uses a multivariate
+  TPE sampler and can warm-start from known-good parameters.
+* **Honest selection** - ``finalize_topk`` returns the top-k trials' full
+  parameter dicts (ES-derived tree count baked in) for re-evaluation on the
+  **outer** 5-fold CV; the winner is picked by outer OOF ROC-AUC, never by the
+  inner-CV argmax.
 
-    study = optuna.create_study(direction='maximize')
-    study.optimize(lgbm_objective(X, y), n_trials=50, show_progress_bar=True)
-
-    print(study.best_value, study.best_params)
-
-Design notes
-------------
-- The inner CV uses 3 folds (not 5) to keep the tuning budget manageable:
-  50 trials × 3 folds = 150 fits per study. Final evaluation in
-  Experiments.ipynb uses 5 folds.
-- All three objectives use the same random_state (42) for the inner CV so
-  that score differences between trials reflect hyperparameter effects, not
-  fold-sampling noise.
-- Fixed inference-time flags (verbosity=0, subsample_freq=1, etc.) are
-  baked into the params dict inside the objective so they are never surfaced
-  to Optuna as tunable knobs, and are never written to the saved JSON either
-  (the save cell in Baselines.ipynb adds them back at load time).
+Conventions: 3-fold inner CV at seed 42; ROC-AUC objective; fixed inference
+flags (``subsample_freq=1``, ``verbose=-1``, ``eval_metric``, ...) are merged in
+by the caller's model factory and never surfaced to Optuna as tunable knobs.
 """
 
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold
 
 
 def _default_cv() -> StratifiedKFold:
+    """Inner CV for tuning: 3 folds, seed 42 (distinct from the 5-fold outer CV)."""
     return StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
 
-
-def lgbm_objective(X, y, cv=None):
-    """Return an Optuna objective for LGBMClassifier tuning.
-
-    Parameters
-    ----------
-    X, y : training features and target.
-    cv   : CV splitter; defaults to StratifiedKFold(n_splits=3, random_state=42).
-
-    Returns
-    -------
-    objective : callable(trial) -> float
-        Mean 3-fold ROC AUC over the suggested hyperparameters.
-    """
-    from lightgbm import LGBMClassifier
-
-    _cv = cv or _default_cv()
-
-    def objective(trial):
-        params = {
-            "n_estimators":      trial.suggest_int("n_estimators", 100, 1000),
-            "learning_rate":     trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-            "num_leaves":        trial.suggest_int("num_leaves", 20, 300),
-            "max_depth":         trial.suggest_int("max_depth", 3, 12),
-            "min_child_samples": trial.suggest_int("min_child_samples", 10, 200),
-            "subsample":         trial.suggest_float("subsample", 0.5, 1.0),
-            "subsample_freq":    1,  # must be >0 for subsample to apply; not tunable
-            "colsample_bytree":  trial.suggest_float("colsample_bytree", 0.5, 1.0),
-            "reg_alpha":         trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
-            "reg_lambda":        trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
-            "min_split_gain":    trial.suggest_float("min_split_gain", 0.0, 1.0),
-            "verbose":           -1,  # suppress per-tree output; not tunable
-        }
-        scores = cross_val_score(LGBMClassifier(**params), X, y, cv=_cv, scoring="roc_auc")
-        return scores.mean()
-
-    return objective
-
-
-def xgb_objective(X, y, cv=None):
-    """Return an Optuna objective for XGBClassifier tuning.
-
-    Parameters
-    ----------
-    X, y : training features and target.
-    cv   : CV splitter; defaults to StratifiedKFold(n_splits=3, random_state=42).
-
-    Returns
-    -------
-    objective : callable(trial) -> float
-        Mean 3-fold ROC AUC over the suggested hyperparameters.
-    """
-    from xgboost import XGBClassifier
-
-    _cv = cv or _default_cv()
-
-    def objective(trial):
-        params = {
-            "n_estimators":     trial.suggest_int("n_estimators", 100, 1000),
-            "learning_rate":    trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-            "max_depth":        trial.suggest_int("max_depth", 3, 10),
-            "min_child_weight": trial.suggest_int("min_child_weight", 1, 20),
-            "subsample":        trial.suggest_float("subsample", 0.5, 1.0),
-            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
-            "reg_alpha":        trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
-            "reg_lambda":       trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
-            "gamma":            trial.suggest_float("gamma", 0.0, 1.0),
-            "verbosity":        0,       # not tunable
-            "eval_metric":      "logloss",  # not tunable
-        }
-        scores = cross_val_score(XGBClassifier(**params), X, y, cv=_cv, scoring="roc_auc")
-        return scores.mean()
-
-    return objective
-
-
-def catboost_objective(X, y, cv=None):
-    """Return an Optuna objective for CatBoostClassifier tuning.
-
-    Parameters
-    ----------
-    X, y : training features and target.
-    cv   : CV splitter; defaults to StratifiedKFold(n_splits=3, random_state=42).
-
-    Returns
-    -------
-    objective : callable(trial) -> float
-        Mean 3-fold ROC AUC over the suggested hyperparameters.
-    """
-    from catboost import CatBoostClassifier
-
-    _cv = cv or _default_cv()
-
-    def objective(trial):
-        params = {
-            "iterations":          trial.suggest_int("iterations", 100, 1000),
-            "learning_rate":       trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-            "depth":               trial.suggest_int("depth", 3, 10),
-            "l2_leaf_reg":         trial.suggest_float("l2_leaf_reg", 1.0, 10.0, log=True),
-            "min_data_in_leaf":    trial.suggest_int("min_data_in_leaf", 1, 100),
-            "random_strength":     trial.suggest_float("random_strength", 0.1, 10.0, log=True),
-            "bagging_temperature": trial.suggest_float("bagging_temperature", 0.0, 1.0),
-            "verbose":             0,  # not tunable
-        }
-        scores = cross_val_score(CatBoostClassifier(**params), X, y, cv=_cv, scoring="roc_auc")
-        return scores.mean()
-
-    return objective
-
-
-# ===========================================================================
-# Upgraded refinement API (early stopping + multivariate TPE + pruning + SQLite)
-# ===========================================================================
-#
-# The three factories above are the ORIGINAL broad-search objectives
-# (cross_val_score, n_estimators tuned, no pruning). They are kept verbatim for
-# backward compatibility with Baselines.ipynb and
-# scripts/run_stacked_experiments.py - do not change their signatures.
-#
-# The functions below are the refinement workflow used by the
-# kaggle/predict-customer-churn-optuna-* notebooks. Differences from the legacy
-# objectives:
-#   * Early stopping replaces tuning `n_estimators`/`iterations`: a large cap +
-#     an in-fold validation set, and the chosen tree count is read back from the
-#     fitted model (median across folds, bumped for the larger 5-fold outer fit).
-#   * A manual fold loop reports per-fold scores via ``trial.report`` so a
-#     ``MedianPruner`` can stop clearly-weak trials after fold 1-2 (big win for
-#     slow EBM / CatBoost).
-#   * ``build_study`` persists to SQLite (resumable across Kaggle sessions),
-#     uses a multivariate TPE sampler, and warm-starts from known-good params.
-#   * ``finalize_topk`` returns the top-k trials' full param dicts (with the
-#     ES-derived tree count baked in) for an honest 5-fold outer re-eval - pick
-#     the winner by OUTER OOF ROC-AUC, not the inner-CV argmax.
-#
-# Conventions preserved: 3-fold inner CV at seed 42; ROC-AUC objective; fixed
-# inference flags (subsample_freq=1, verbose=-1, eval_metric, ...) are merged in
-# by the caller's model_factory and never surfaced to Optuna.
 
 ES_ROUNDS_DEFAULT = 150       # early-stopping patience on the in-fold validation set
 MAX_ESTIMATORS = 5000         # ceiling; ES decides the actual tree count

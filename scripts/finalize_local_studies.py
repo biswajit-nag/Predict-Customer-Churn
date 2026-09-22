@@ -38,7 +38,7 @@ from sklearn.model_selection import StratifiedKFold
 from src.tracking import DATA_DIR
 from src.cv import run_cv_experiment, save_experiment
 from src.tuning import (build_study, finalize_topk, lgbm_tuning_objective,
-                        ebm_tuning_objective, catboost_tuning_objective)
+                        ebm_tuning_objective)
 
 FE_VERSION = "fe_v4_native"
 SEARCH = "narrow"
