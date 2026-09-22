@@ -1,43 +1,35 @@
 # Data
 
-Raw competition files are not checked into the repository. Run the fetch
-script below to download them from Kaggle.
+The competition files are not checked into the repository (they are Kaggle
+competition data). Download them with the fetch script.
 
 ## Prerequisites
 
-1. Install the `kaggle` package:
-   ```
-   pip install kaggle
-   ```
-   or, if using uv:
-   ```
-   uv add kaggle
-   ```
-2. Authenticate with your Kaggle credentials:
-   ```
-   kaggle auth login
-   ```
-   For further details, follow the [official instructions here](https://github.com/Kaggle/kaggle-cli/blob/main/docs/README.md#authentication).
+The `kaggle` CLI with an API token — see
+[docs/reference/kaggle_setup.md](../docs/reference/kaggle_setup.md), or Kaggle's
+[authentication instructions](https://github.com/Kaggle/kaggle-cli/blob/main/docs/README.md#authentication).
+You must also have accepted the competition rules on the
+[competition page](https://www.kaggle.com/competitions/playground-series-s6e3).
 
 ## Download
 
 From the project root:
 
-```
+```bash
 python data/fetch_data.py
 ```
 
-This will:
-- Download `playground-series-s6e3.zip` from Kaggle
-- Extract `train.csv` and `test.csv` into `data/raw/`
-- Delete the zip file and the unused `sample_submission.csv`
+This downloads `playground-series-s6e3.zip`, extracts `train.csv` and `test.csv`
+into `data/`, and removes the zip.
 
-## Processed files
+## Derived files (not committed, regenerated on demand)
 
-After downloading the raw files, run `notebooks/02_baselines.ipynb` end-to-end
-to produce the preprocessed parquets used by the remaining notebooks:
+| Path | Produced by | Contents |
+|---|---|---|
+| `data/processed/train_df.parquet`, `test_df.parquet` | `src.data.prepare_data(encoding="onehot")` | 40 one-hot columns, for linear models |
+| `data/processed/train_df_native.parquet`, `test_df_native.parquet` | `src.data.prepare_data(encoding="native")` | the 19 raw features, strings as `category` dtype |
+| `data/processed/train_df_fe_v4_native.parquet`, … | `src.features.build_features("fe_v4_native")` | native base + engineered features |
 
-```
-data/processed/train_df.parquet
-data/processed/test_df.parquet
-```
+Every file is written in raw `train.csv` row order — never reordered — which is
+what keeps the shared cross-validation folds in
+`experiments/cv_folds_seed42.csv.gz` valid for every model.

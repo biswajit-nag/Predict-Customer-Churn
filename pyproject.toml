@@ -1,11 +1,15 @@
 [project]
 name = "predict-customer-churn"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Leakage-aware tabular ML on Kaggle Playground S6E3 (customer churn, ROC-AUC): shared-fold CV, a git-tracked experiment ledger, pre-registered blending, and a documented negative result for level-2 stacking."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Biswajit Nag", email = "biswajit.nag.math@gmail.com" }]
 requires-python = ">=3.14"
 dependencies = [
     "catboost>=1.2.10",
+    "interpret>=0.7.0",
     "ipykernel>=7.2.0",
     "ipywidgets>=8.1.8",
     "jinja2>=3.1.6",
@@ -13,15 +17,44 @@ dependencies = [
     "matplotlib>=3.10.8",
     "optuna>=4.8.0",
     "pandas>=3.0.2",
-    "pip>=26.0.1",
     "pyarrow>=24.0.0",
-    "pytabkit>=1.7.3",
     "scikit-learn>=1.8.0",
     "scipy>=1.17.1",
     "seaborn>=0.13.2",
     "shap>=0.51.0",
-    "tabicl>=2.1.1",
-    "tabpfn>=8.0.8",
     "tqdm>=4.67.3",
     "xgboost>=3.2.0",
 ]
+
+[project.optional-dependencies]
+# Tabular foundation models and deep tabular nets. These runs were executed on
+# Kaggle GPU kernels (see docs/reference/kaggle_gpu_workflow.md); they are not
+# needed to use src/, run the tests, or re-execute the notebooks.
+tfm = [
+    "pytabkit>=1.7.3",
+    "tabicl>=2.1.1",
+    "tabpfn>=8.0.8",
+]
+
+[project.urls]
+Repository = "https://github.com/biswajit-nag/Predict-Customer-Churn"
+Competition = "https://www.kaggle.com/competitions/playground-series-s6e3"
+
+[dependency-groups]
+dev = [
+    "nbconvert>=7.16.0",
+    "pytest>=8.4.0",
+    "ruff>=0.13.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["scripts/archive", "*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]

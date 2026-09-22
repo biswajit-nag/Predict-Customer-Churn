@@ -1,0 +1,2 @@
+*.ipynb diff=jupyter
+*.csv.gz binary
