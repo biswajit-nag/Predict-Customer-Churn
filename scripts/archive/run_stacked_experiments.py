@@ -1,4 +1,4 @@
-"""Execute the three stacked-feature + pseudo-label GBDT runs from Experiments.ipynb.
+"""Execute the three stacked-feature + pseudo-label GBDT runs (originally a section of the experiments notebook).
 
 Mirrors the `## Stacked OOF meta-features + true pseudo-labels` notebook section,
 as a script so it can run unattended (and so re-running the whole notebook's slow
